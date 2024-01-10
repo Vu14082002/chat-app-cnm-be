@@ -1,5 +1,6 @@
 const { ObjectId } = require('mongodb');
 const httpErrors = require('http-errors');
+const bcrypt = require('bcrypt');
 const QRcode = require('qrcode');
 const { UserModel } = require('../models');
 const createUser = async (userInfo) => {
@@ -35,4 +36,19 @@ const createUser = async (userInfo) => {
     return userSaved;
 };
 
-module.exports = { createUser };
+const loginUser = async (userLogin) => {
+    const { phone, password } = userLogin;
+    const user = await UserModel.findOne({ phone });
+    if (!user) {
+        throw httpErrors.BadRequest('The phone or password you entered is incorrect');
+    }
+    // compare password
+    const checkPassword = await bcrypt.compare(password, user.password);
+    if (!checkPassword) {
+        throw httpErrors.BadRequest('The phone or password you entered is incorrect');
+    }
+
+    return user;
+};
+
+module.exports = { createUser, loginUser };
