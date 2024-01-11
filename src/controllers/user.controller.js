@@ -1,21 +1,24 @@
-const { createUser, loginUser } = require('../services/auth.service');
+const logger = require('../logger');
+const { UserModel } = require('../models');
+const { createUser, loginUser, checkRefreshToken } = require('../services/auth.service');
 const { genToken } = require('../services/jwtToken.service');
+const httpErrors = require('http-errors');
+const { findUser } = require('../services/user.service');
 
 const register = async (req, res, next) => {
     try {
         const { name, phone, password, dateOfBirth, gender, avatar, background, status } = req.body;
-        const userSaved = await createUser({ name, phone, password, dateOfBirth, gender, avatar, background, status });
+        const user = await createUser({ name, phone, password, dateOfBirth, gender, avatar, background, status });
         const { ACCESS_TOKEN_KEY, REFRESH_TOKEN_KEY } = process.env;
-        console.log(`ACCESS_TOKEN_KEY -->`, ACCESS_TOKEN_KEY);
-        const accessToken = await genToken({ userId: userSaved._id }, '1d', ACCESS_TOKEN_KEY);
-        const refreshToken = await genToken({ userId: userSaved._id }, '14d', REFRESH_TOKEN_KEY);
+        const accessToken = await genToken({ userId: user._id }, ACCESS_TOKEN_KEY, '1d');
+        const refreshToken = await genToken({ userId: user._id }, REFRESH_TOKEN_KEY, '14d');
         // respone
         res.cookie('refreshToken', refreshToken, {
             httpOnly: true,
             path: '/api/v1/auth/refreshToken',
             maxAge: 14 * 24 * 60 * 60 * 1000, // 14 days
         });
-        res.status(201).json({ message: 'Register success', accessToken: accessToken, user: { _id: userSaved._id } });
+        res.status(201).json({ message: 'Register success', accessToken: accessToken, user });
     } catch (error) {
         next(error);
     }
@@ -25,15 +28,15 @@ const login = async (req, res, next) => {
         const { phone, password } = req.body;
         const user = await loginUser({ phone, password });
         const { ACCESS_TOKEN_KEY, REFRESH_TOKEN_KEY } = process.env;
-        const accessToken = await genToken({ userId: user._id }, '1d', ACCESS_TOKEN_KEY);
-        const refreshToken = await genToken({ userId: user._id }, '14d', REFRESH_TOKEN_KEY);
+        const accessToken = await genToken({ userId: user._id }, ACCESS_TOKEN_KEY, '1d');
+        const refreshToken = await genToken({ userId: user._id }, REFRESH_TOKEN_KEY, '14d');
         // respone
         res.cookie('refreshToken', refreshToken, {
             httpOnly: true,
             path: '/api/v1/auth/refreshToken',
             maxAge: 14 * 24 * 60 * 60 * 1000, // 14 days
         });
-        res.status(201).json({ message: 'Login message', accessToken: accessToken, user });
+        res.status(201).json({ message: 'Login success', accessToken, user });
     } catch (error) {
         next(error);
     }
@@ -48,6 +51,14 @@ const logout = async (req, res, next) => {
 };
 const refreshToken = async (req, res, next) => {
     try {
+        const refreshToken = req.cookies.refreshToken;
+        if (!refreshToken) {
+            throw httpErrors.Unauthorized('Please login to continue');
+        }
+        const check = await checkRefreshToken(refreshToken, process.env.REFRESH_TOKEN_KEY);
+        const user = await findUser(check.userId);
+        const accessToken = await genToken({ userId: user._id }, process.env.ACCESS_TOKEN_KEY, '1d');
+        res.status(201).json({ accessToken, user });
     } catch (error) {
         next(error);
     }

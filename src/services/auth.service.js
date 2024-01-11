@@ -3,6 +3,7 @@ const httpErrors = require('http-errors');
 const bcrypt = require('bcrypt');
 const QRcode = require('qrcode');
 const { UserModel } = require('../models');
+const { verifyToken } = require('../utils/tokenJwt.util');
 const createUser = async (userInfo) => {
     const { name, phone, password, dateOfBirth, gender, avatar, background, status } = userInfo;
     // validator here
@@ -50,5 +51,9 @@ const loginUser = async (userLogin) => {
 
     return user;
 };
+const checkRefreshToken = async (token, key) => {
+    const check = await verifyToken(token, key);
+    return check;
+};
 
-module.exports = { createUser, loginUser };
+module.exports = { createUser, loginUser, checkRefreshToken };
