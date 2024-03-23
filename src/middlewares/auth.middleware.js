@@ -2,9 +2,10 @@ const createHttpError = require('http-errors');
 const jsonwebtoken = require('jsonwebtoken');
 const logger = require('../logger');
 const { logout } = require('../controllers/user.controller');
+const { request, response } = require('express');
 
-const checkAuthorized = async (req, res, next) => {
-    const token = req.headers['authorization']?.split(' ')[1];
+const checkAuthorized = async (req = request, resp = response, next) => {
+    const token = req.headers?.authorization?.split(' ')[1];
     if (!token) {
         return next(createHttpError.Unauthorized('Please login to continue'));
     }

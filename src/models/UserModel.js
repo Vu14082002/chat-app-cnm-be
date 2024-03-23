@@ -11,7 +11,6 @@ const userSchema = mongoose.Schema(
             type: String,
             required: [true, 'Please provide phone number'],
             unique: [true, 'phone number already exist'],
-            // validate: [validator.isMobilePhone, 'Please provide valid phone number'],
         },
         password: {
             type: String,
@@ -37,7 +36,7 @@ const userSchema = mongoose.Schema(
         },
         status: {
             type: String,
-            default: 'Hey~ this is first status',
+            default: 'offline',
         },
         deleted: {
             type: Boolean,
@@ -65,6 +64,13 @@ userSchema.pre('save', async function (next) {
         next(error);
     }
 });
+userSchema.pre('findOneAndUpdate', async function (next) {
+    try {
+        this.set('updatedAt', new Date());
+        next();
+    } catch (error) {
+        next(error);
+    }
+});
 const UserModel = mongoose.model.UserModel || mongoose.model('UserModel', userSchema);
-
-module.exports = UserModel;
+module.exports = { UserModel };
