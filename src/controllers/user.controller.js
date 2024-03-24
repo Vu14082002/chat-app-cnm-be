@@ -30,6 +30,7 @@ const register = async (req = request, resp = response, next) => {
                gender,
                background,
                status,
+               avatar,
           } = req.body;
 
           const user = await createUser({
