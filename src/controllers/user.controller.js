@@ -12,6 +12,7 @@ const {
      findUser,
      findUserByPhoneAndPasswordBscrypt,
      findUserByPhoneNumberRegex,
+     findUserById,
 } = require('../services/user.service');
 const { StatusCodes } = require('http-status-codes');
 
@@ -63,10 +64,15 @@ const register = async (req = request, res = response, next) => {
           next(error);
      }
 };
-const login = async (req = request, res = response, next) => {
+const login = async (req = request, resp = response, next) => {
      try {
           const { phone, password } = req.body;
           const user = await loginUser({ phone, password });
+          if (user.deleted) {
+               resp.status(StatusCodes.OK).json({
+                    message: 'Account have delete, You want to restore',
+               });
+          }
           const { ACCESS_TOKEN_KEY, REFRESH_TOKEN_KEY } = process.env;
           const accessToken = await genToken(
                { userId: user._id },
@@ -79,12 +85,16 @@ const login = async (req = request, res = response, next) => {
                '14d'
           );
           // respone
-          res.cookie('refreshToken', refreshToken, {
+          resp.cookie('refreshToken', refreshToken, {
                httpOnly: true,
                path: '/api/v1/auth/refreshToken',
                maxAge: 14 * 24 * 60 * 60 * 1000, // 14 days
           });
-          res.status(201).json({ message: 'Login success', accessToken, user });
+          resp.status(StatusCodes.OK).json({
+               message: 'Login success',
+               accessToken,
+               user,
+          });
      } catch (error) {
           next(error);
      }
@@ -151,6 +161,16 @@ const findUserByPhone = async (req = request, resp = response, next) => {
           next(error);
      }
 };
+
+const userInfo = async (req = request, resp = response, next) => {
+     try {
+          const userId = req.user.userId;
+          const user = await findUserById(userId);
+          resp.status(StatusCodes.OK).json(user);
+     } catch (error) {
+          next(error);
+     }
+};
 module.exports = {
      login,
      register,
@@ -158,4 +178,5 @@ module.exports = {
      refreshToken,
      authenticateWithEncryptedCredentials,
      findUserByPhone,
+     userInfo,
 };

@@ -1,6 +1,7 @@
 const httpErrors = require('http-errors');
 const { UserModel } = require('../models/UserModel');
 const { CommandFailedEvent } = require('mongodb');
+const { userInfo } = require('os');
 
 // find user by id
 const findUser = async (id) => {
@@ -36,9 +37,16 @@ const findUserByPhoneNumberRegex = async (keyword, userId) => {
           );
      }
 };
+const findUserById = async (userId) => {
+     const user = await UserModel.find({ _id: userId }).select(
+          '_id name phone dateOfBirth gender avatar background'
+     );
+     return user;
+};
 
 module.exports = {
      findUser,
      findUserByPhoneAndPasswordBscrypt,
      findUserByPhoneNumberRegex,
+     findUserById,
 };
