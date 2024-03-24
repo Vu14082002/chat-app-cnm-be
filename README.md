@@ -16,4 +16,8 @@
 | /api/v1/auth/login        | POST      |  Đang cập nhật......    | Đang cập nhật......|
 | /api/v1/auth/logout       | POST      |    Đang cập nhật......                 | Đang cập nhật......|
 | /api/v1/auth/refreshToken | POST      |  Đang cập nhật......    | Đang cập nhật......|
-| /api/v1/auth/refreshToken | GET      |  Đang cập nhật......    | Đang cập nhật......|
+| /api/v1/conversation | POST      |  Đang cập nhật......    | Đang cập nhật......|
+| /api/v1/conversation | GET      |  Đang cập nhật......    | Đang cập nhật......|
+| /api/v1/message | POST      |  Đang cập nhật......    | Đang cập nhật......|
+| /api/v1/message/:conversationId | GET      |  Đang cập nhật......    | Đang cập nhật......|
+| /api/v1/user?search=keywork | GET      |  Đang cập nhật......    | Đang cập nhật......|
