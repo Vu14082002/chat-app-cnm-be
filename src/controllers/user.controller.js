@@ -15,6 +15,8 @@ const {
      findUserByPhoneNumberRegex,
      findUserById,
      updateAvatarURL,
+     addNewFriend,
+     deleteFriendById,
 } = require('../services/user.service');
 const { StatusCodes } = require('http-status-codes');
 const { s3 } = require('../configs/s3.config');
@@ -87,7 +89,7 @@ const login = async (req = request, resp = response, next) => {
                '14d'
           );
           // respone
-          resp.cookie('refreshtoken', refreshToken, {
+          resp.cookie('refreshToken', refreshToken, {
                httpOnly: true,
                path: '/api/v1/auth/refreshToken',
                maxAge: 14 * 24 * 60 * 60 * 1000, // 14 days
@@ -112,7 +114,10 @@ const logout = async (req = request, res = response, next) => {
      }
 };
 const refreshToken = async (req = request, resp = response, next) => {
+     console.log(req);
      try {
+          console.log(`com innn`);
+          console.log(req.cookies);
           const refreshToken = req.cookies.refreshToken;
           if (!refreshToken) {
                throw httpErrors.Unauthorized('Please login to continue');
@@ -197,6 +202,26 @@ const updateAvatar = async (req = request, resp = response, next) => {
           next(error);
      }
 };
+const addfriend = async (req = request, resp = response, next) => {
+     try {
+          const userId = req.user.userId;
+          const { friendId } = req.body;
+          const result = await addNewFriend(userId, friendId);
+          resp.status(StatusCodes.OK).json(result);
+     } catch (error) {
+          next(error);
+     }
+};
+const deleteFriend = async (req = request, resp = response, next) => {
+     try {
+          const userId = req.user.userId;
+          const { friendId } = req.body;
+          const result = await deleteFriendById(userId, friendId);
+          resp.status(StatusCodes.OK).json(result);
+     } catch (error) {
+          next(error);
+     }
+};
 module.exports = {
      login,
      register,
@@ -206,4 +231,6 @@ module.exports = {
      findUserByPhone,
      userInfo,
      updateAvatar,
+     addfriend,
+     deleteFriend,
 };

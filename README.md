@@ -10,6 +10,8 @@
 
 ## Express Router and Routes
 
+## API DOMAIN: chat-app-cnm-be.vercel.app
+
 | Route                           | HTTP Verb | Route Middleware    | Description                         | input                                                                                                             | ouput                                  |
 | ------------------------------- | --------- | ------------------- | ----------------------------------- | ----------------------------------------------------------------------------------------------------------------- | -------------------------------------- |
 | /api/v1/auth/register           | POST      | trim.all            | register user                       | { "name":"string", "phone":"string", "password":"string", "dateOfBirth":"yyyy-MM-DD", "gender":"male or female" } | {message,accessToken,usser:{info....}} |

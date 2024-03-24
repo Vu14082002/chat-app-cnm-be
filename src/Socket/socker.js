@@ -1,6 +1,7 @@
 const socketServer = (socket, io) => {
      let userOnline = [];
      socket.on('online', (userId) => {
+          console.log(`mesage`, userId);
           socket.join(userId);
           checkOnline = userOnline.some((u) => u.userId === userId);
           if (!checkOnline) {
@@ -28,3 +29,4 @@ const socketServer = (socket, io) => {
           });
      });
 };
+module.exports = { socketServer };

@@ -54,10 +54,55 @@ const updateAvatarURL = async (userId, avatarUrl) => {
      }
 };
 
+const addNewFriend = async (userId, friendId) => {
+     try {
+          const user = await UserModel.findOneAndUpdate(
+               { _id: userId, friends: { $ne: friendId } },
+               { $addToSet: { friends: friendId } },
+               { new: true }
+          );
+          if (!user) {
+               return { success: false, message: 'Friend already exists' };
+          }
+
+          return user;
+     } catch (error) {
+          throw httpErrors.BadRequest(error);
+     }
+};
+
+const deleteFriendById = async (userId, friendId) => {
+     try {
+          await UserModel.updateOne(
+               { _id: userId },
+               { $pull: { friends: friendId } }
+          );
+
+          return { success: true, message: 'Friend deleted successfully' };
+     } catch (error) {
+          return { success: false, message: error.message };
+     }
+};
+const getFriendListSortedByName = async (userId) => {
+     try {
+          const user = await UserModel.findById(userId).populate({
+               path: 'friends',
+               options: { sort: { name: 1 } },
+          });
+
+          return { success: true, friends: user.friends };
+     } catch (error) {
+          return { success: false, message: error.message };
+     }
+};
+
 module.exports = {
      findUser,
      findUserByPhoneAndPasswordBscrypt,
      findUserByPhoneNumberRegex,
      findUserById,
      updateAvatarURL,
+     addNewFriend,
+     deleteFriendById,
+     getFriendListSortedByName,
 };
