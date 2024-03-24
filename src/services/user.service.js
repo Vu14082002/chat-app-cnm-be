@@ -36,7 +36,7 @@ const findUserByPhoneNumberRegex = async (keyword, userId) => {
      }
 };
 const findUserById = async (userId) => {
-     const user = await UserModel.find({ _id: userId }).select(
+     const user = await UserModel.findOne({ _id: userId }).select(
           '_id name phone dateOfBirth gender avatar background'
      );
      return user;
