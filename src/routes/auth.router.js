@@ -16,7 +16,7 @@ authRoutes
      .post(trimRequest.all, authenticateWithEncryptedCredentials);
 authRoutes.route('/login').post(trimRequest.all, login);
 authRoutes.route('/logout').post(trimRequest.all, logout);
-authRoutes.route('/refreshtoken').post(trimRequest.all, refreshToken);
+authRoutes.route('/refreshToken').post(trimRequest.all, refreshToken);
 authRoutes
      .route('/testauth')
      .get(trimRequest.all, checkAuthorized, (req, res) => {

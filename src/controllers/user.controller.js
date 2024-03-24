@@ -1,4 +1,5 @@
 const logger = require('../logger');
+require('dotenv').config();
 const { UserModel } = require('../models/UserModel');
 const { request, response } = require('express');
 const {
@@ -13,10 +14,11 @@ const {
      findUserByPhoneAndPasswordBscrypt,
      findUserByPhoneNumberRegex,
      findUserById,
+     updateAvatarURL,
 } = require('../services/user.service');
 const { StatusCodes } = require('http-status-codes');
-
-const register = async (req = request, res = response, next) => {
+const { s3 } = require('../configs/s3.config');
+const register = async (req = request, resp = response, next) => {
      try {
           const {
                name,
@@ -24,10 +26,10 @@ const register = async (req = request, res = response, next) => {
                password,
                dateOfBirth,
                gender,
-               avatar,
                background,
                status,
           } = req.body;
+
           const user = await createUser({
                name,
                phone,
@@ -50,12 +52,12 @@ const register = async (req = request, res = response, next) => {
                '14d'
           );
           // respone
-          res.cookie('refreshToken', refreshToken, {
+          resp.cookie('refreshToken', refreshToken, {
                httpOnly: true,
                path: '/api/v1/auth/refreshToken',
                maxAge: 14 * 24 * 60 * 60 * 1000, // 14 days
           });
-          res.status(201).json({
+          resp.status(201).json({
                message: 'Register success',
                accessToken: accessToken,
                user,
@@ -85,7 +87,7 @@ const login = async (req = request, resp = response, next) => {
                '14d'
           );
           // respone
-          resp.cookie('refreshToken', refreshToken, {
+          resp.cookie('refreshtoken', refreshToken, {
                httpOnly: true,
                path: '/api/v1/auth/refreshToken',
                maxAge: 14 * 24 * 60 * 60 * 1000, // 14 days
@@ -109,7 +111,7 @@ const logout = async (req = request, res = response, next) => {
           next(error);
      }
 };
-const refreshToken = async (req = request, res = response, next) => {
+const refreshToken = async (req = request, resp = response, next) => {
      try {
           const refreshToken = req.cookies.refreshToken;
           if (!refreshToken) {
@@ -125,7 +127,7 @@ const refreshToken = async (req = request, res = response, next) => {
                process.env.ACCESS_TOKEN_KEY,
                '7d'
           );
-          res.status(201).json({ accessToken, user });
+          resp.status(201).json({ accessToken, user });
      } catch (error) {
           next(error);
      }
@@ -171,6 +173,30 @@ const userInfo = async (req = request, resp = response, next) => {
           next(error);
      }
 };
+const updateAvatar = async (req = request, resp = response, next) => {
+     try {
+          console.log(`come herre`);
+          const userId = req.user.userId;
+          const img = req.file.originalname.split('.')[1];
+          const avatar = `${id}_${Date.now()}.${img}`;
+          const paramsS3 = {
+               Bucket: process.env.BUCKET_NAME,
+               Key: avatar,
+               Body: req.file.buffer,
+               ContentType: req.file.mimetype,
+          };
+          const avatarUrl = s3.upload(paramsS3, async (error, data) => {
+               if (error) {
+                    return resp.send('error fromm server: UPLOAD FILE IMG');
+               }
+               return data.Location;
+          });
+          const user = await updateAvatarURL(userId, avatarUrl);
+          resp.status(StatusCodes.OK).json(user);
+     } catch (error) {
+          next(error);
+     }
+};
 module.exports = {
      login,
      register,
@@ -179,4 +205,5 @@ module.exports = {
      authenticateWithEncryptedCredentials,
      findUserByPhone,
      userInfo,
+     updateAvatar,
 };

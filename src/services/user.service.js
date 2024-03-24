@@ -1,12 +1,10 @@
 const httpErrors = require('http-errors');
 const { UserModel } = require('../models/UserModel');
-const { CommandFailedEvent } = require('mongodb');
-const { userInfo } = require('os');
 
 // find user by id
 const findUser = async (id) => {
      const userFind = await UserModel.findOne({ _id: id });
-     if (!user) {
+     if (!userFind) {
           throw httpErrors.BadRequest(
                'Please fill out all information in the form'
           );
@@ -43,10 +41,23 @@ const findUserById = async (userId) => {
      );
      return user;
 };
+const updateAvatarURL = async (userId, avatarUrl) => {
+     try {
+          const user = await UserModel.findOneAndUpdate(
+               { _id: userId },
+               { $set: { avatar: avatarUrl } },
+               { new: true }
+          ).select('_id name phone dateOfBirth gender avatar background');
+          return user;
+     } catch (error) {
+          throw httpErrors.BadRequest(error);
+     }
+};
 
 module.exports = {
      findUser,
      findUserByPhoneAndPasswordBscrypt,
      findUserByPhoneNumberRegex,
      findUserById,
+     updateAvatarURL,
 };

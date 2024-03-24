@@ -15,13 +15,11 @@ const instanceMongoDb = require('./db/init.mongodb.js');
 // config dotenv
 dotenv.config();
 const app = express();
-
-//  connect db
 instanceMongoDb;
 
 // init middleware
 if (process.env.NODE_ENV !== 'production') {
-    app.use(morgan('dev'));
+     app.use(morgan('dev'));
 }
 app.use(helmet());
 app.use(express.json());
@@ -39,17 +37,17 @@ app.use('/api/v1', routes);
 
 // Error
 app.use(async (req, res, next) => {
-    next(httpErrors.NotFound(` 'SORRY' we couldn't find resource `));
+     next(httpErrors.NotFound(` 'SORRY' we couldn't find resource `));
 });
 
 app.use(async (err, req, res, next) => {
-    res.status(err.status || 500);
-    res.send({
-        error: {
-            status: err.status || 500,
-            message: err.message,
-        },
-    });
+     res.status(err.status || 500);
+     res.send({
+          error: {
+               status: err.status || 500,
+               message: err.message,
+          },
+     });
 });
 
-module.exports = app;
+module.exports = { app };

@@ -6,13 +6,13 @@ const socketServer = (socket, io) => {
           if (!checkOnline) {
                userOnline.push({ userId, socketId: socket.id });
           }
-          io.emet('usersOnline', userOnline);
+          io.emit('usersOnline', userOnline);
      });
      socket.on('disconnect', () => {
           userOnline = userOnline.filter((u) => u.socketId !== socket.id);
-          io.emet('usersOnline', userOnline);
+          io.emit('usersOnline', userOnline);
      });
-     socket.on('openconversation', (conversationId) => {
+     socket.on('openConversation', (conversationId) => {
           socket.join(conversationId);
      });
      socket.on('sendMessage', (message) => {
@@ -24,8 +24,7 @@ const socketServer = (socket, io) => {
                if (element._id === message.sender._id) {
                     return;
                }
-               socket.in(element._id).emet('recivedMessage', message);
+               socket.in(element._id).emit('receivedMessage', message);
           });
      });
 };
-module.exports = { socketServer };

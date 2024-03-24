@@ -1,6 +1,6 @@
 // import
 const { socketServer } = require('./src/Socket/socker');
-const app = require('./src/app');
+const { app } = require('./src/app');
 const logger = require('./src/logger');
 const { Server, Socket } = require('socket.io');
 
