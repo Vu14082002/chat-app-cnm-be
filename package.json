@@ -37,6 +37,7 @@
           "qrcode": "^1.5.3",
           "socket.io": "^4.7.5",
           "trim-request": "^1.0.6",
+          "uuid": "^9.0.1",
           "validator": "^13.11.0",
           "winston": "^3.11.0"
      }

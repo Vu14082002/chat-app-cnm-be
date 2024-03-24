@@ -27,7 +27,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(mongosanitize());
 app.use(cookieParser());
 app.use(compression());
-app.use(fileupload({ useTempFiles: true }));
+// app.use(fileupload({ useTempFiles: true }));
 // chio co duong dan nay moi dc ket noi toi server con lai thi ko dc connect
 // them cho biet' vay thoi, du an nay ko can ::) do~ phien'
 // app.use(cors({ origin: 'http://localhost:3000' }));

@@ -1,6 +1,5 @@
 const logger = require('../logger');
 require('dotenv').config();
-const { UserModel } = require('../models/UserModel');
 const { request, response } = require('express');
 const {
      createUser,
@@ -19,6 +18,7 @@ const {
      deleteFriendById,
 } = require('../services/user.service');
 const { StatusCodes } = require('http-status-codes');
+const uuid = require('uuid');
 const { s3 } = require('../configs/s3.config');
 const register = async (req = request, resp = response, next) => {
      try {
@@ -181,9 +181,11 @@ const userInfo = async (req = request, resp = response, next) => {
 };
 const updateAvatar = async (req = request, resp = response, next) => {
      try {
+          console.log(req.file);
           const userId = req.user.userId;
           const img = req.file.originalname.split('.')[1];
-          const avatar = `${id}_${Date.now()}.${img}`;
+          const avatar = `${uuid.v4()}_${Date.now()}.${img}`;
+
           const paramsS3 = {
                Bucket: process.env.BUCKET_NAME,
                Key: avatar,
@@ -191,18 +193,16 @@ const updateAvatar = async (req = request, resp = response, next) => {
                ContentType: req.file.mimetype,
           };
 
-          const uploadPromise = new Promise((resolve, reject) => {
-               s3.upload(paramsS3, async (error, data) => {
-                    if (error) {
-                         reject(error);
-                    } else {
-                         resolve(data.Location);
-                    }
-               });
+          s3.upload(paramsS3, async (error, data) => {
+               if (error) {
+                    return resp.send('error fromm server: UPLOAD FILE IMG');
+               }
+               const avatarUrl = data.Location;
+               console.log('------------------------------------');
+               console.log(userId, '-------------', avatarUrl);
+               const user = await updateAvatarURL(userId, avatarUrl);
+               resp.status(StatusCodes.OK).json(user);
           });
-          const avatarUrl = await uploadPromise();
-          const user = await updateAvatarURL(userId, avatarUrl);
-          resp.status(StatusCodes.OK).json(user);
      } catch (error) {
           next(error);
      }

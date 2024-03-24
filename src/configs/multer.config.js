@@ -17,17 +17,7 @@ const checkFileType = (file, cb) => {
 //           callback(null, '');
 //      },
 // });
-const storage = multer.diskStorage({
-     destination(_req, _file, callback) {
-          callback(null, './images');
-     },
-     filename(_req, file, callback) {
-          callback(
-               null,
-               `${file.fieldname}_${new Date()}_${file.originalname}`
-          );
-     },
-});
+const storage = multer.memoryStorage();
 
 // const upload = multer({
 //      storage,

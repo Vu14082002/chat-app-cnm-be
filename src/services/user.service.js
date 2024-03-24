@@ -45,9 +45,10 @@ const updateAvatarURL = async (userId, avatarUrl) => {
      try {
           const user = await UserModel.findOneAndUpdate(
                { _id: userId },
-               { $set: { avatar: avatarUrl } },
+               { avatar: avatarUrl },
                { new: true }
-          ).select('_id name phone dateOfBirth gender avatar background');
+          );
+          console.log(user);
           return user;
      } catch (error) {
           throw httpErrors.BadRequest(error);
