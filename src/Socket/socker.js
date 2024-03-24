@@ -14,6 +14,7 @@ const socketServer = (socket, io) => {
           io.emit('usersOnline', userOnline);
      });
      socket.on('openConversation', (conversationId) => {
+          console.log(conversationId);
           socket.join(conversationId);
      });
      socket.on('sendMessage', (message) => {

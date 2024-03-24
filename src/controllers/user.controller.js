@@ -181,7 +181,6 @@ const userInfo = async (req = request, resp = response, next) => {
 };
 const updateAvatar = async (req = request, resp = response, next) => {
      try {
-          console.log(`come herre`);
           const userId = req.user.userId;
           const img = req.file.originalname.split('.')[1];
           const avatar = `${id}_${Date.now()}.${img}`;
@@ -191,22 +190,31 @@ const updateAvatar = async (req = request, resp = response, next) => {
                Body: req.file.buffer,
                ContentType: req.file.mimetype,
           };
-          const avatarUrl = s3.upload(paramsS3, async (error, data) => {
-               if (error) {
-                    return resp.send('error fromm server: UPLOAD FILE IMG');
-               }
-               return data.Location;
+
+          const uploadPromise = new Promise((resolve, reject) => {
+               s3.upload(paramsS3, async (error, data) => {
+                    if (error) {
+                         reject(error);
+                    } else {
+                         resolve(data.Location);
+                    }
+               });
           });
+          const avatarUrl = await uploadPromise();
           const user = await updateAvatarURL(userId, avatarUrl);
           resp.status(StatusCodes.OK).json(user);
      } catch (error) {
           next(error);
      }
 };
-const addfriend = async (req = request, resp = response, next) => {
+
+const addfriend = async (req, resp, next) => {
      try {
           const userId = req.user.userId;
           const { friendId } = req.body;
+          console.log(`----------------------------`);
+          console.log(userId);
+          console.log(req);
           const result = await addNewFriend(userId, friendId);
           resp.status(StatusCodes.OK).json(result);
      } catch (error) {
