@@ -10,17 +10,17 @@
 
 ## Express Router and Routes
 
-| Route                     | HTTP Verb | Route Middleware   | Description                          |input|output|
-| --------------------------| --------- | ------------------ | ------------------------------------ |----|------|
-| /api/v1/auth/register     | POST      | trim.all    |register user |{ "name":"string", "phone":"string", "password":"string", "dateOfBirth":"yyyy-MM-DD", "gender":"male or female" }| {message,accessToken,usser:{info....}}|
-| /api/v1/auth/login        | POST      |  Đang cập nhật......    | Đang cập nhật......|||
-| /api/v1/auth/loginWithEncrypted       | POST      |    Đang cập nhật......                 | Đang cập nhật......|{ phone, password }|Đang cập nhật......|
-| /api/v1/auth/logout       | POST      |    Đang cập nhật......                 | Đang cập nhật......|
-| /api/v1/auth/refreshToken | GET      |  Đang cập nhật......    | 
-| /api/v1/auth/refreshToken | POST      |  Đang cập nhật......    | Đang cập nhật......|
-| /api/v1/conversation | POST      |  Đang cập nhật......    | open old or new conversation (chat)| | |
-| /api/v1/conversation | GET      |  Đang cập nhật......    | getListUserConversations|
-| /api/v1/message | POST      |  Đang cập nhật......    | Đang cập nhật......|
-| /api/v1/message/:conversationId | GET      |  Đang cập nhật......    | Đang cập nhật......|
-| /api/v1/user?search=keywork | GET      |  Đang cập nhật......    | search regex by name or phone
-| /api/v1/user/info | GET      |  Đang cập nhật......    | Đang cập nhật......|
+| Route                           | HTTP Verb | Route Middleware    | Description                         | input                                                                                                             | ouput                                  |
+| ------------------------------- | --------- | ------------------- | ----------------------------------- | ----------------------------------------------------------------------------------------------------------------- | -------------------------------------- |
+| /api/v1/auth/register           | POST      | trim.all            | register user                       | { "name":"string", "phone":"string", "password":"string", "dateOfBirth":"yyyy-MM-DD", "gender":"male or female" } | {message,accessToken,usser:{info....}} |
+| /api/v1/auth/login              | POST      | Đang cập nhật...... | Đang cập nhật......                 |                                                                                                                   |                                        |
+| /api/v1/auth/loginWithEncrypted | POST      | Đang cập nhật...... | Đang cập nhật......                 | { phone, password }                                                                                               | Đang cập nhật......                    |
+| /api/v1/auth/logout             | POST      | Đang cập nhật...... | Đang cập nhật......                 |
+| /api/v1/auth/refreshToken       | GET       | Đang cập nhật...... |
+| /api/v1/auth/refreshToken       | POST      | Đang cập nhật...... | Đang cập nhật......                 |
+| /api/v1/conversation            | POST      | Đang cập nhật...... | open old or new conversation (chat) |                                                                                                                   |                                        |
+| /api/v1/conversation            | GET       | Đang cập nhật...... | getListUserConversations            |
+| /api/v1/message                 | POST      | Đang cập nhật...... | Đang cập nhật......                 |
+| /api/v1/message/:conversationId | GET       | Đang cập nhật...... | Đang cập nhật......                 |
+| /api/v1/user?search=keywork     | GET       | Đang cập nhật...... | search regex by name or phone       |
+| /api/v1/user/info               | GET       | Đang cập nhật...... | Đang cập nhật......                 |
