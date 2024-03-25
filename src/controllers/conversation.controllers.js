@@ -7,7 +7,6 @@ const {
     createConversation,
     populateConversation,
     getListUserConversations,
-    renameConVersationService,
 } = require('../services/conversation.service');
 const { findUser } = require('../services/user.service');
 
@@ -62,4 +61,4 @@ const getConversations = async(req = request, resp = response) => {
 //         throw createHttpError.BadRequest('Some thing wrong, Try agian');
 //     }
 // };
-module.exports = { openConversation, getConversations, renameConVersation };
+module.exports = { openConversation, getConversations };

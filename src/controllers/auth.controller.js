@@ -37,11 +37,12 @@ const login = async(req, resp, next) => {
     try {
         const { phone, password } = req.body;
         const user = await loginUser({ phone, password });
-        if (user.deleted) {
-            resp.status(StatusCodes.OK).json({
-                message: 'Account have delete, You want to restore',
-            });
-        }
+        console.log(user);
+        // if (user.deleted) {
+        //     resp.status(StatusCodes.OK).json({
+        //         message: 'Account have delete, You want to restore',
+        //     });
+        // }
         const { ACCESS_TOKEN_KEY, REFRESH_TOKEN_KEY } = process.env;
         const accessToken = await genToken({ userId: user._id }, ACCESS_TOKEN_KEY, '7d');
         const refreshToken = await genToken({ userId: user._id }, REFRESH_TOKEN_KEY, '14d');
@@ -64,11 +65,11 @@ const loginAuthenticateWithEncryptedCredentials = async(req, resp, next) => {
     try {
         const { phone, password } = req.body;
         const user = await findUserByPhoneAndPasswordBscrypt({ phone, password });
-        if (user.deleted) {
-            resp.status(StatusCodes.OK).json({
-                message: 'Account have delete, You want to restore',
-            });
-        }
+        // if (user.deleted) {
+        //     resp.status(StatusCodes.OK).json({
+        //         message: 'Account have delete, You want to restore',
+        //     });
+        // }
         const { ACCESS_TOKEN_KEY, REFRESH_TOKEN_KEY } = process.env;
         const accessToken = await genToken({ userId: user._id }, ACCESS_TOKEN_KEY, '7d');
         const refreshToken = await genToken({ userId: user._id }, REFRESH_TOKEN_KEY, '14d');
