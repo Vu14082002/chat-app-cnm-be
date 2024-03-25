@@ -21,7 +21,7 @@ userRouter
     .post(trimRequest.all, checkAuthorized, addfriend);
 userRouter
     .route('/deletefriend')
-    .post(trimRequest.all, checkAuthorized, deleteFriend);
+    .delete(trimRequest.all, checkAuthorized, deleteFriend);
 userRouter
     .route('/updateAvatar')
     .post(checkAuthorized, upload.single('avatar'), updateAvatar);
