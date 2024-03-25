@@ -1,10 +1,10 @@
 const express = require('express');
 const {
-     findUserByPhone,
-     userInfo,
-     updateAvatar,
-     addfriend,
-     deleteFriend,
+    findUserByPhone,
+    userInfo,
+    updateAvatar,
+    addfriend,
+    deleteFriend,
 } = require('../controllers/user.controller');
 const trimRequest = require('trim-request');
 const { checkAuthorized } = require('../middlewares/auth.middleware');
@@ -17,13 +17,13 @@ const upload = multer({ storage });
 userRouter.route('/').get(trimRequest.all, checkAuthorized, findUserByPhone);
 userRouter.route('/info').get(trimRequest.all, checkAuthorized, userInfo);
 userRouter
-     .route('/addfriend')
-     .post(trimRequest.all, checkAuthorized, addfriend);
+    .route('/addfriend')
+    .post(trimRequest.all, checkAuthorized, addfriend);
 userRouter
-     .route('/deletefriend')
-     .post(trimRequest.all, checkAuthorized, deleteFriend);
+    .route('/deletefriend')
+    .post(trimRequest.all, checkAuthorized, deleteFriend);
 userRouter
-     .route('/updateAvatar')
-     .post(checkAuthorized, upload.single('avatar'), updateAvatar);
+    .route('/updateAvatar')
+    .post(checkAuthorized, upload.single('avatar'), updateAvatar);
 
 module.exports = { userRouter };

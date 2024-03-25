@@ -16,15 +16,10 @@ const openConversation = async (req = request, resp = response, next) => {
           const reciverUserId = req.body.reciverUserId;
           if (!reciverUserId) {
                logger.error('Please Provide user to begin conversation');
-               throw createHttpError.BadGateway(
-                    'Please Provide user_id to begin conversation'
-               );
+               throw createHttpError.BadGateway('Please Provide user_id to begin conversation');
           }
           // check conversation is exsist
-          const resultCheck = await checkExistConversation(
-               senderUserId,
-               reciverUserId
-          );
+          const resultCheck = await checkExistConversation(senderUserId, reciverUserId);
           if (resultCheck) {
                resp.json(resultCheck);
           } else {
@@ -35,17 +30,13 @@ const openConversation = async (req = request, resp = response, next) => {
                     isGroup: false,
                     users: [senderUserId, reciverUserId],
                };
-               const conversationSaved = await createConversation(
-                    conversationData
-               );
+               const conversationSaved = await createConversation(conversationData);
                const populateConversationData = await populateConversation(
                     conversationSaved._id,
                     'users',
                     '-password'
                );
-               resp.status(httpStatusCodes.StatusCodes.CREATED).json(
-                    populateConversationData
-               );
+               resp.status(httpStatusCodes.StatusCodes.CREATED).json(populateConversationData);
           }
      } catch (error) {
           next(error);

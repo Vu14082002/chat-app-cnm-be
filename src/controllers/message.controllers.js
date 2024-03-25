@@ -1,22 +1,14 @@
 const { request, response } = require('express');
-const createHttpError = require('http-errors');
 const { StatusCodes } = require('http-status-codes');
-const {
-     createMessage,
-     messagePopulate,
-     getConversationMessage,
-} = require('../services/message.service');
+const { createMessage, messagePopulate, getConversationMessage } = require('../services/message.service');
 const { updateLastMessage } = require('../services/conversation.service');
-const { getConversations } = require('./conversation.controllers');
 
 const sendMessage = async (req = request, resp = response, next) => {
      try {
           const userId = req.user.userId;
           const { message, files, conversationId } = req.body;
           if ((!message && files) || !conversationId) {
-               resp.status(StatusCodes.BAD_REQUEST).json(
-                    'Please provide a conversationId and message'
-               );
+               resp.status(StatusCodes.BAD_REQUEST).json('Please provide a conversationId and message');
           }
 
           const messageData = {
