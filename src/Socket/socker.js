@@ -42,6 +42,28 @@ const socketServer = (socket, io) => {
       socket.in(element._id).emit('receivedMessage', message);
     });
   });
+  // {}
+  socket.on('addFriend', (message) => {
+    const friend = userOnline.find((user) => user.userId === message);
+    const userSend = userOnline.find((user) => user.socketId === socket.id);
+    if (friend) {
+      io.to(friend.socketId).emit('receivedAddFriend', `${userSend.userId} gửi lời mời kết bạn`);
+    } else {
+      console.log('false');
+    }
+  });
+  socket.on('acceptFriend', (message) => {
+    const friend = userOnline.find((user) => user.userId === message);
+    const userSend = userOnline.find((user) => user.socketId === socket.id);
+    if (friend) {
+      io.to(friend.socketId).emit(
+        'receivedAddFriend',
+        `${userSend.userId} đã chấp thuận lời mời kết ban`
+      );
+    } else {
+      console.log('false');
+    }
+  });
   // rời nhóm
 };
 module.exports = { socketServer };
