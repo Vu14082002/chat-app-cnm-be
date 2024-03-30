@@ -35,10 +35,14 @@ const messagePopulate = async (id) => {
      return message;
 };
 
-const getConversationMessage = async (conversationId) => {
+const getConversationMessage = async (conversationId, page, size) => {
      const message = await MessageModel.find({
           conversation: conversationId,
-     }).populate('sender', 'name avatar status');
+     })
+          .populate('sender', 'name avatar')
+          .sort({ createdAt: -1 })
+          .skip((page - 1) * size)
+          .limit(size);
      if (!message) {
           throw createHttpError.BadRequest('conversationId is not contain');
      }

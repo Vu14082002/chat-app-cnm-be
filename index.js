@@ -16,8 +16,15 @@ const server = app.listen(PORT, () => {
 //     logger.info('Co nguoi ket noi', socket.id);
 //     socketServer(socket, io);
 // });
-const io = require('socket.io')(server);
-io.on('connection', client => {
-    console.log("CO nguoi ket noi", client.id);
-    socketServer(client, io)
+const io = require('socket.io')(server, {
+    pingTimeout: 60000,
+    cors: {
+        origin: '*',
+        methods: ['GET', 'POST'],
+    },
+});
+
+io.on('connection', (client) => {
+    console.log('CO nguoi ket noi', client.id);
+    socketServer(client, io);
 });
