@@ -40,6 +40,14 @@ const getConversationMessage = async (conversationId, page, size) => {
           conversation: conversationId,
      })
           .populate('sender', 'name avatar')
+          .populate('reply', 'sender messages files')
+          .populate({
+               path: 'reply',
+               populate: {
+                   path: 'sender',
+                   select: 'name avatar'
+               }
+           })
           .sort({ createdAt: -1 })
           .skip((page - 1) * size)
           .limit(size);
