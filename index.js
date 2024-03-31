@@ -7,17 +7,17 @@ const { Server } = require('socket.io');
 // ----------------------------------------------------------
 const PORT = process.env.PORT || 4000;
 const server = app.listen(PORT, () => {
-    logger.info(`server is running in PORT: ${PORT}`);
+  logger.info(`server is running in PORT: ${PORT}`);
 });
-// const io = new Server(server, {
-//     pingTimeout: 60000,
-// });
-// io.on('connection', (socket) => {
-//     logger.info('Co nguoi ket noi', socket.id);
-//     socketServer(socket, io);
-// });
-const io = require('socket.io')(server);
-io.on('connection', client => {
-    console.log("CO nguoi ket noi", client.id);
-    socketServer(client, io)
+// socket io
+const io = new Server(server, {
+  pingTimeout: 60000,
+  cors: {
+    origin: '*',
+    methods: ['GET', 'POST', 'DELETE', 'PUT', 'PATCH'],
+  },
+});
+io.on('connection', (socket) => {
+  logger.info('socket io connect success');
+  socketServer(socket, io);
 });
