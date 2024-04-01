@@ -93,5 +93,13 @@ const socketServer = (socket, io) => {
       socket.in(element._id).emit('receivedMessage', message);
     });
   });
+  // typing
+  socket.one('typing', (conversationId) => {
+    socket.in(conversationId).emit('typing');
+  });
+  // stop typing
+  socket.one('stopTyping', (conversationId) => {
+    socket.in(conversationId).emit('stopTyping');
+  });
 };
 module.exports = { socketServer };
