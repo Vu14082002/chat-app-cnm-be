@@ -14,7 +14,7 @@ class Database {
                mongoose.set('debug', { color: true });
           }
           mongoose
-               .connect(connectString, { maxPoolSize: 100, useNewUrlParser: true, useUnifiedTopology: true })
+               .connect(connectString, { maxPoolSize: 100, useNewUrlParser: true, useUnifiedTopology: true, readPreference: 'nearest' })
                .then(() => {
                     logger.info('Connect MongoDb Success');
                })
