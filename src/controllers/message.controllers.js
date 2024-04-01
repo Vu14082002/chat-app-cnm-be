@@ -13,7 +13,9 @@ const sendMessage = async (req = request, resp = response, next) => {
     const userId = req.user.userId;
     const { messages, files, conversationId, reply, sticker } = req.body;
     if ((!messages && files) || !conversationId) {
-      resp.status(StatusCodes.BAD_REQUEST).json('Please provide a conversationId and message');
+      return resp
+        .status(StatusCodes.BAD_REQUEST)
+        .json('Please provide a conversationId and message');
     }
 
     const messageData = {
@@ -34,10 +36,9 @@ const sendMessage = async (req = request, resp = response, next) => {
 };
 const getMessage = async (req = request, resp = response, next) => {
   try {
-    const page = +req.query.page || 1;
-    const size = +req.query.size || 20;
+    const messageId = req.query.messageId;
     const conversationId = req.params.conversationId;
-    const message = await getConversationMessage(conversationId, page, size);
+    const message = await getConversationMessage(conversationId, messageId);
     resp.status(StatusCodes.OK).json(message);
   } catch (error) {
     next(error);

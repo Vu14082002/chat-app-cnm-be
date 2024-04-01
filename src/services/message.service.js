@@ -31,9 +31,13 @@ const messagePopulate = async (id) => {
   return message;
 };
 
-const getConversationMessage = async (conversationId, page, size) => {
+const getConversationMessage = async (conversationId, messageId) => {
+  const filter = [{ conversation: conversationId }];
+
+  if (messageId) filter.push({ _id: { $lt: messageId } });
+
   const message = await MessageModel.find({
-    conversation: conversationId,
+    $and: filter,
   })
     .populate('sender', 'name avatar')
     .populate('reply', 'sender messages files')
@@ -45,8 +49,7 @@ const getConversationMessage = async (conversationId, page, size) => {
       },
     })
     .sort({ createdAt: -1 })
-    .skip((page - 1) * size)
-    .limit(size);
+    .limit(process.env.MESSAGE_PER_PAGE);
   if (!message) {
     throw createHttpError.BadRequest('conversationId is not contain');
   }
