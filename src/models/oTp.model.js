@@ -3,7 +3,7 @@ const { ObjectId } = mongoose.Schema.Types;
 
 const otpSchema = mongoose.Schema(
   {
-    phone: {
+    contact: {
       type: String,
     },
     otp: {

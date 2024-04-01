@@ -1,55 +1,58 @@
 const {
   createOTPService,
-  getLastOtp,
-  isValidOtpService,
+  getLastOTPService,
+  isValidOTPService,
   deleteManyOTPService,
 } = require('../services/otp.service');
 const { OtpGenerator } = require('../helpers/otp.generator');
 const httpErrors = require('http-errors');
 require('dotenv').config();
 const {
-  loginUser,
+  loginUserService,
   checkRefreshToken,
-  createUser,
-  findUserByPhoneAndPasswordBscrypt,
+  createUserService,
+  findUserByPhoneAndPasswordBscryptService,
 } = require('../services/auth.service');
 const { genToken } = require('../services/jwtToken.service');
-const { findUser, checkPhoneExistServices } = require('../services/user.service');
+const { findUserByIdService } = require('../services/user.service');
 const { StatusCodes } = require('http-status-codes');
 const { sendEmail } = require('../helpers/mail.transport');
-const { get } = require('mongoose');
-const createOTP = async (req, resp, next) => {
+const createOTPEmail = async (req, resp, next) => {
   try {
-    const phone = req.body.phone;
-    const phoneExist = await checkPhoneExistServices(phone);
-
-    if (phoneExist) {
-      return resp
-        .status(StatusCodes.CONFLICT)
-        .json({ message: 'Phone number already exists, please try again with another one.' });
+    const contact = req.body.contact;
+    let errorMessage = 'Phone';
+    if (contact.includes('@')) {
+      errorMessage = 'Email';
     }
 
-    const otp = await OtpGenerator();
-    const result = await createOTPService(phone, otp);
+    const userFind = await findUserByIdService(contact);
 
-    if (!result) {
+    // Nếu không tìm thấy người dùng
+    if (!userFind) {
+      const otp = await OtpGenerator();
+      const result = await createOTPService(contact, otp);
+      if (!result) {
+        return resp
+          .status(StatusCodes.INTERNAL_SERVER_ERROR)
+          .json({ message: 'Failed to create OTP, please try later....' });
+      }
+      if (errorMessage === 'Email') {
+        const locals = {
+          appLink: process.env.FE_LINK,
+          OTP: otp,
+          title: '',
+        };
+
+        const subject = 'Verify Email FOR CHAT APP CNM';
+        await sendEmail('verifyEmail', contact, subject, locals);
+      } else {
+        // OTP phone later
+        // TODO: Send OTP phone
+      }
       return resp
-        .status(StatusCodes.INTERNAL_SERVER_ERROR)
-        .json({ message: 'Failed to create OTP, please try again.' });
+        .status(StatusCodes.CREATED)
+        .json({ message: `OTP sent successfully to ${errorMessage.toLowerCase()} ${contact}` });
     }
-
-    const locals = {
-      appLink: process.env.FE_LINK,
-      OTP: otp,
-      title: '',
-    };
-
-    const subject = 'Verify Email FOR CHAT APP CNM';
-    await sendEmail('verifyEmail', phone, subject, locals);
-
-    return resp
-      .status(StatusCodes.CREATED)
-      .json({ message: `OTP sent successfully to email ${phone}` });
   } catch (error) {
     next(error);
   }
@@ -57,37 +60,41 @@ const createOTP = async (req, resp, next) => {
 
 const verifyOTP = async (req, resp, next) => {
   try {
-    const { phone, otp } = req.body;
-    const lastOtp = await getLastOtp(phone);
+    const { contact, otp } = req.body;
+    const lastOtp = await getLastOTPService(contact);
+
+    // Kiểm tra xem lastOtp có tồn tại hay không để xác định xem OTP đã hết hạn chưa
     if (!lastOtp) {
       return resp.status(StatusCodes.BAD_REQUEST).json({ message: 'Expired OTP' });
     }
-    const isValidOtp = await isValidOtpService(otp, lastOtp.otp);
+
+    // Kiểm tra tính hợp lệ của OTP
+    const isValidOtp = await isValidOTPService(otp, lastOtp.otp);
     if (!isValidOtp) {
-      resp.status(StatusCodes.BAD_REQUEST).json({ message: 'Invalid OTP' });
+      return resp.status(StatusCodes.BAD_REQUEST).json({ message: 'Invalid OTP' });
     }
-    if (isValidOtp && phone === lastOtp.phone) {
-      await deleteManyOTPService(phone);
-      resp.status(StatusCodes.OK).json({ message: 'OTP Verify' });
+
+    // Nếu mã OTP hợp lệ và contact khớp với lastOtp.contact, thực hiện xóa mã OTP theo contact
+    if (isValidOtp && contact === lastOtp.contact) {
+      deleteManyOTPService(contact);
+      return resp.status(StatusCodes.OK).json({ message: 'OTP Verified' });
     } else {
-      resp.status(StatusCodes.BAD_REQUEST).json({ message: 'OTP Invalid ' });
+      return resp.status(StatusCodes.BAD_REQUEST).json({ message: 'Invalid OTP' });
     }
   } catch (error) {
     next(error);
   }
 };
+
 const register = async (req, resp, next) => {
   try {
-    const { name, phone, password, dateOfBirth, gender, background, status, avatar } = req.body;
-    const user = await createUser({
+    const { name, contact, password, dateOfBirth, gender } = req.body;
+    const user = await createUserService({
+      _id: contact,
       name,
-      phone,
       password,
       dateOfBirth,
       gender,
-      avatar,
-      background,
-      status,
     });
     const { ACCESS_TOKEN_KEY, REFRESH_TOKEN_KEY } = process.env;
     const accessToken = await genToken({ userId: user._id }, ACCESS_TOKEN_KEY, '1d');
@@ -107,14 +114,17 @@ const register = async (req, resp, next) => {
     next(error);
   }
 };
+// TODO: thêm cái chặm login, nếu login sai 3 lân liên tiếp
 const login = async (req, resp, next) => {
   try {
-    const { phone, password } = req.body;
-    const user = await loginUser({ phone, password });
+    const { contact, password } = req.body;
+    const user = await loginUserService({ contact, password });
+    // TODO:Nếu tài khoản bị xóa
     // if (user.deleted) {
-    //     resp.status(StatusCodes.OK).json({
-    //         message: 'Account have delete, You want to restore',
-    //     });
+    //   resp.status(StatusCodes.BAD_REQUEST).json({
+
+    //     message: 'Account have block, Please contect nguyenvanvu20020814@gmail.com to restore',
+    //   });
     // }
     const { ACCESS_TOKEN_KEY, REFRESH_TOKEN_KEY } = process.env;
     const accessToken = await genToken({ userId: user._id }, ACCESS_TOKEN_KEY, '7d');
@@ -136,13 +146,18 @@ const login = async (req, resp, next) => {
 };
 const loginAuthenticateWithEncryptedCredentials = async (req, resp, next) => {
   try {
-    const { phone, password } = req.body;
-    const user = await findUserByPhoneAndPasswordBscrypt({ phone, password });
+    const userId = req.body.userId;
+    const password = req.body.password;
+    const user = await findUserByPhoneAndPasswordBscryptService({ userId, password });
+    // TODO: Kiểm tra nếu tài khoản bị xóa
     // if (user.deleted) {
     //     resp.status(StatusCodes.OK).json({
     //         message: 'Account have delete, You want to restore',
     //     });
     // }
+    if (!user) {
+      return resp.status(StatusCodes.NOT_FOUND).json({ message: 'NOT FOUND USER AND PASSWORD' });
+    }
     const { ACCESS_TOKEN_KEY, REFRESH_TOKEN_KEY } = process.env;
     const accessToken = await genToken({ userId: user._id }, ACCESS_TOKEN_KEY, '7d');
     const refreshToken = await genToken({ userId: user._id }, REFRESH_TOKEN_KEY, '14d');
@@ -161,30 +176,30 @@ const loginAuthenticateWithEncryptedCredentials = async (req, resp, next) => {
     next(error);
   }
 };
+// TODO: Create QR code for Login
+// const generateQR = async (req, resp, next) => {
+//   try {
+//     const code = Math.random().toString(36).substr(2, 8);
 
-const generateQR = async (req, resp, next) => {
-  try {
-    const code = Math.random().toString(36).substr(2, 8);
+//     const qrExist = await QRCode.findOne({ userId });
 
-    const qrExist = await QRCode.findOne({ userId });
+//     if (!qrExist) {
+//       await QRCode.create({ userId });
+//     } else {
+//       await QRCode.findOneAndUpdate({ userId }, { $set: { disabled: true } });
+//       await QRCode.create({ userId });
+//     }
 
-    if (!qrExist) {
-      await QRCode.create({ userId });
-    } else {
-      await QRCode.findOneAndUpdate({ userId }, { $set: { disabled: true } });
-      await QRCode.create({ userId });
-    }
-
-    // Generate encrypted data
-    const encryptedData = jwt.sign({ userId: user._id, email }, process.env.TOKEN_KEY, {
-      expiresIn: '1d',
-    });
-    const dataImage = await QR.toDataURL(encryptedData);
-    return resp.status(200).json({ dataImage });
-  } catch (err) {
-    next(err);
-  }
-};
+//     // Generate encrypted data
+//     const encryptedData = jwt.sign({ userId: user._id, email }, process.env.TOKEN_KEY, {
+//       expiresIn: '1d',
+//     });
+//     const dataImage = await QR.toDataURL(encryptedData);
+//     return resp.status(200).json({ dataImage });
+//   } catch (err) {
+//     next(err);
+//   }
+// };
 
 const logout = async (req, res, next) => {
   try {
@@ -215,36 +230,40 @@ const refreshToken = async (req, resp, next) => {
 };
 const forgotpassword = async (req, resp, next) => {
   try {
-    const phone = req.body.phone;
-    const phoneExist = await checkPhoneExistServices(phone);
-
-    if (phoneExist) {
-      return resp
-        .status(StatusCodes.CONFLICT)
-        .json({ message: 'Phone number already exists, please try again with another one.' });
+    const contact = req.body.contact;
+    let errorMessage = 'Phone';
+    if (contact.includes('@')) {
+      errorMessage = 'Email';
     }
 
-    const otp = await OtpGenerator();
-    const result = await createOTPService(phone, otp);
+    const userFind = await findUserByIdService(contact);
 
-    if (!result) {
+    // Nếu tìm thấy người dùng
+    if (userFind) {
+      const otp = await OtpGenerator();
+      const result = await createOTPService(contact, otp);
+      if (!result) {
+        return resp
+          .status(StatusCodes.INTERNAL_SERVER_ERROR)
+          .json({ message: 'Failed to create OTP, please try later....' });
+      }
+      if (errorMessage === 'Email') {
+        const locals = {
+          appLink: process.env.FE_LINK,
+          OTP: otp,
+          title: '',
+        };
+
+        const subject = 'Forgot Password Web CHAT APP CNM';
+        await sendEmail('verifyEmail', contact, subject, locals);
+      } else {
+        // OTP phone later
+        // TODO: Send OTP phone
+      }
       return resp
-        .status(StatusCodes.INTERNAL_SERVER_ERROR)
-        .json({ message: 'Failed to create OTP, please try again.' });
+        .status(StatusCodes.CREATED)
+        .json({ message: `OTP sent successfully to ${errorMessage.toLowerCase()} ${contact}` });
     }
-
-    const locals = {
-      appLink: process.env.FE_LINK,
-      OTP: otp,
-      title: '',
-    };
-
-    const subject = 'Verify Email FOR CHAT APP CNM';
-    await sendEmail('verifyEmail', phone, subject, locals);
-
-    return resp
-      .status(StatusCodes.CREATED)
-      .json({ message: `OTP sent successfully to email ${phone}` });
   } catch (error) {
     next(error);
   }
@@ -256,8 +275,7 @@ module.exports = {
   logout,
   refreshToken,
   loginAuthenticateWithEncryptedCredentials,
-  createOTP,
+  createOTPEmail,
   verifyOTP,
   forgotpassword,
-  generateQR,
 };

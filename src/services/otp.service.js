@@ -2,30 +2,26 @@ const { OtpGenerator } = require('../helpers/otp.generator');
 const bcrypt = require('bcrypt');
 const httpErrors = require('http-errors');
 const { OTPModel } = require('../models/oTp.model');
-const createOTPService = async (phone, otp) => {
+const createOTPService = async (contact, otp) => {
   try {
     const slat = await bcrypt.genSalt(10);
     const hashOtp = await bcrypt.hash(otp, slat);
-    const OtpSaved = await OTPModel.create({ phone, otp: hashOtp });
+    const OtpSaved = await OTPModel.create({ contact, otp: hashOtp });
     return OtpSaved ? true : false;
   } catch (error) {
     console.log(error);
     return false;
   }
 };
-const getLastOtp = async (phone) => {
+const getLastOTPService = async (contact) => {
   try {
-    const otp = await OTPModel.find({ phone });
-    if (!otp.length) {
-      return false;
-    }
-    const lastOtp = otp[otp.length - 1];
+    const lastOtp = await OTPModel.find({ contact }).sort({ time: -1 }).limit(1);
     return lastOtp;
   } catch (error) {
     throw httpErrors.BadRequest('Some thing wrong, Please try again late');
   }
 };
-const isValidOtpService = async (otp, hashOtp) => {
+const isValidOTPService = async (otp, hashOtp) => {
   try {
     const isValid = await bcrypt.compare(otp, hashOtp);
     return isValid;
@@ -33,17 +29,9 @@ const isValidOtpService = async (otp, hashOtp) => {
     throw httpErrors.BadRequest('Some thing wrong, Please try again late');
   }
 };
-const findOtpByIdService = async (id) => {
+const deleteManyOTPService = async (contact) => {
   try {
-    const otp = await OTPModel.findById(id);
-    return otp;
-  } catch (error) {
-    throw httpErrors.BadRequest('Some thing wrong, Please try again late');
-  }
-};
-const deleteManyOTPService = async (phone) => {
-  try {
-    await OTPModel.deleteMany({ phone });
+    await OTPModel.deleteMany({ contact });
   } catch (error) {
     throw httpErrors.BadRequest('Some thing wrong, Please try again late');
   }
@@ -51,8 +39,7 @@ const deleteManyOTPService = async (phone) => {
 
 module.exports = {
   createOTPService,
-  findOtpByIdService,
-  getLastOtp,
-  isValidOtpService,
+  getLastOTPService,
+  isValidOTPService,
   deleteManyOTPService,
 };

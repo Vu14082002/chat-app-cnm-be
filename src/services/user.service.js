@@ -2,21 +2,11 @@ const httpErrors = require('http-errors');
 const { UserModel } = require('../models/user.model');
 
 // find user by id
-const findUser = async (id) => {
-  const userFind = await UserModel.findOne({ _id: id });
-  if (!userFind) {
-    throw httpErrors.BadRequest('Please fill out all information in the form');
-  }
-  return userFind;
-};
+const httpErrors = require('http-errors');
 
-const checkPhoneExistServices = async (phone) => {
-  try {
-    const data = await UserModel.findOne({ phone });
-    return data;
-  } catch (error) {
-    throw httpErrors.BadRequest('Some thing wrong, Please try again late');
-  }
+const findUserByIdService = async (id) => {
+  const userFind = await UserModel.findById(id);
+  return userFind;
 };
 
 const findUserByPhoneNumberRegex = async (keyword, userId) => {
@@ -129,12 +119,11 @@ const getFriendListSortedByName = async (userId) => {
 };
 
 module.exports = {
-  findUser,
+  findUserByIdService,
   findUserByPhoneNumberRegex,
   findUserById,
   updateAvatarURL,
   addNewFriend,
   deleteFriendById,
   getFriendListSortedByName,
-  checkPhoneExistServices,
 };
