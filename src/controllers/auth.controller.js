@@ -64,7 +64,7 @@ const verifyOTP = async (req, resp, next) => {
     }
     const isValidOtp = await isValidOtpService(otp, lastOtp.otp);
     if (!isValidOtp) {
-      resp.status(StatusCodes.OK).json({ message: 'Invalid OTP' });
+      resp.status(StatusCodes.BAD_REQUEST).json({ message: 'Invalid OTP' });
     }
     if (isValidOtp && phone === lastOtp.phone) {
       await deleteManyOTPService(phone);
@@ -161,6 +161,31 @@ const loginAuthenticateWithEncryptedCredentials = async (req, resp, next) => {
     next(error);
   }
 };
+
+const generateQR = async (req, resp, next) => {
+  try {
+    const code = Math.random().toString(36).substr(2, 8);
+
+    const qrExist = await QRCode.findOne({ userId });
+
+    if (!qrExist) {
+      await QRCode.create({ userId });
+    } else {
+      await QRCode.findOneAndUpdate({ userId }, { $set: { disabled: true } });
+      await QRCode.create({ userId });
+    }
+
+    // Generate encrypted data
+    const encryptedData = jwt.sign({ userId: user._id, email }, process.env.TOKEN_KEY, {
+      expiresIn: '1d',
+    });
+    const dataImage = await QR.toDataURL(encryptedData);
+    return resp.status(200).json({ dataImage });
+  } catch (err) {
+    next(err);
+  }
+};
+
 const logout = async (req, res, next) => {
   try {
     res.clearCookie('refreshToken', {
@@ -188,6 +213,42 @@ const refreshToken = async (req, resp, next) => {
     next(error);
   }
 };
+const forgotpassword = async (req, resp, next) => {
+  try {
+    const phone = req.body.phone;
+    const phoneExist = await checkPhoneExistServices(phone);
+
+    if (phoneExist) {
+      return resp
+        .status(StatusCodes.CONFLICT)
+        .json({ message: 'Phone number already exists, please try again with another one.' });
+    }
+
+    const otp = await OtpGenerator();
+    const result = await createOTPService(phone, otp);
+
+    if (!result) {
+      return resp
+        .status(StatusCodes.INTERNAL_SERVER_ERROR)
+        .json({ message: 'Failed to create OTP, please try again.' });
+    }
+
+    const locals = {
+      appLink: process.env.FE_LINK,
+      OTP: otp,
+      title: '',
+    };
+
+    const subject = 'Verify Email FOR CHAT APP CNM';
+    await sendEmail('verifyEmail', phone, subject, locals);
+
+    return resp
+      .status(StatusCodes.CREATED)
+      .json({ message: `OTP sent successfully to email ${phone}` });
+  } catch (error) {
+    next(error);
+  }
+};
 
 module.exports = {
   login,
@@ -197,4 +258,6 @@ module.exports = {
   loginAuthenticateWithEncryptedCredentials,
   createOTP,
   verifyOTP,
+  forgotpassword,
+  generateQR,
 };
