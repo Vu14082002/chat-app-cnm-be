@@ -94,12 +94,12 @@ const socketServer = (socket, io) => {
     });
   });
   // typing
-  socket.one('typing', (conversationId) => {
-    socket.in(conversationId).emit('typing');
-  });
+  // socket.one('typing', (conversationId) => {
+  //   socket.in(conversationId).emit('typing');
+  // });
   // stop typing
-  socket.one('stopTyping', (conversationId) => {
-    socket.in(conversationId).emit('stopTyping');
-  });
+  // socket.one('stopTyping', (conversationId) => {
+  //   socket.in(conversationId).emit('stopTyping');
+  // });
 };
 module.exports = { socketServer };
