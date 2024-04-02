@@ -7,6 +7,7 @@ const {
   updateAvatarURL,
   addNewFriend,
   deleteFriendById,
+  updateUserInfoService,
 } = require('../services/user.service');
 const { StatusCodes } = require('http-status-codes');
 const uuid = require('uuid');
@@ -84,10 +85,27 @@ const deleteFriend = async (req, resp, next) => {
     next(error);
   }
 };
+
+const updateUserInfo = async (req, resp, next) => {
+  try {
+    const userId = req.user.userId;
+    const { name, gender, dateOfBirth } = req.body;
+
+    if (!name || !gender || !dateOfBirth)
+      return resp.status(StatusCodes.BAD_REQUEST).json({ message: 'Invalid data' });
+
+    const user = await updateUserInfoService({ _id: userId, name, gender, dateOfBirth });
+    resp.status(StatusCodes.OK).json(user);
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   findUserByPhone,
   userInfo,
   updateAvatar,
   addfriend,
   deleteFriend,
+  updateUserInfo,
 };

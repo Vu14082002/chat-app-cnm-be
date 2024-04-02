@@ -5,6 +5,7 @@ const {
   updateAvatar,
   addfriend,
   deleteFriend,
+  updateUserInfo,
 } = require('../controllers/user.controller');
 const trimRequest = require('trim-request');
 const { checkAuthorized } = require('../middlewares/auth.middleware');
@@ -20,5 +21,6 @@ userRouter.route('/info').get(trimRequest.all, checkAuthorized, userInfo);
 userRouter.route('/addfriend').post(trimRequest.all, checkAuthorized, addfriend);
 userRouter.route('/deletefriend').delete(trimRequest.all, checkAuthorized, deleteFriend);
 userRouter.route('/updateAvatar').post(checkAuthorized, upload.single('avatar'), updateAvatar);
+userRouter.route('/').patch(checkAuthorized, trimRequest.all, updateUserInfo);
 
 module.exports = { userRouter };
