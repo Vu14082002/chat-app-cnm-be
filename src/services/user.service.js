@@ -2,20 +2,18 @@ const httpErrors = require('http-errors');
 const { UserModel } = require('../models/user.model');
 
 // find user by id
-const httpErrors = require('http-errors');
-
 const findUserByIdService = async (id) => {
   const userFind = await UserModel.findById(id);
   return userFind;
 };
 
-const findUserByPhoneNumberRegex = async (keyword, userId) => {
+const findUserByContactOrNameRegex = async (keyword, userId) => {
   try {
     const userFind = await UserModel.find({
       $and: [
         {
           $or: [
-            { phone: { $regex: keyword, $options: 'i' } },
+            { _id: { $regex: keyword, $options: 'i' } },
             { name: { $regex: keyword, $options: 'i' } },
           ],
         },
@@ -54,25 +52,22 @@ const addNewFriend = async (userId, friendId) => {
   try {
     const opts = { session, new: true };
     const user = await UserModel.findOneAndUpdate(
-      { _id: userId, friends: { $ne: friendId } },
+      { _id: userId, friends: { $nin: friendId } },
       { $addToSet: { friends: friendId } },
       opts
     );
+
     if (!user) {
-      await session.abortTransaction();
-      session.endSession();
-      return { success: false, message: 'Không thể thêm bạn' };
+      throw new Error({ success: false, message: 'Không thể thêm bạn' });
     }
 
     const friend = await UserModel.findOneAndUpdate(
-      { _id: friendId, friends: { $ne: userId } },
+      { _id: friendId, friends: { $nin: userId } },
       { $addToSet: { friends: userId } },
       opts
     );
     if (!friend) {
-      await session.abortTransaction();
-      session.endSession();
-      return { success: false, message: 'Không thể thêm bạn' };
+      throw new Error({ success: false, message: 'Không thể thêm bạn' });
     }
 
     await session.commitTransaction();
@@ -120,7 +115,7 @@ const getFriendListSortedByName = async (userId) => {
 
 module.exports = {
   findUserByIdService,
-  findUserByPhoneNumberRegex,
+  findUserByContactOrNameRegex,
   findUserById,
   updateAvatarURL,
   addNewFriend,

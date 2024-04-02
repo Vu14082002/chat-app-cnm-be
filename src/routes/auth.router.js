@@ -15,6 +15,7 @@ const authRoutes = express.Router();
 
 authRoutes.route('/createOTPEmail').post(trimRequest.all, createOTPEmail);
 authRoutes.route('/verifyOTP').post(trimRequest.all, verifyOTP);
+// [ ] QRCode
 authRoutes.route('/register').post(trimRequest.all, register);
 authRoutes
   .route('/loginWithEncrypted')

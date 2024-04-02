@@ -44,10 +44,10 @@ const userSchema = mongoose.Schema(
       type: Boolean,
       default: false,
     },
-    qrCode: {
-      type: String,
-      required: true,
-    },
+    // qrCode: {
+    //   type: String,
+    //   required: true,
+    // },
     friends: [
       {
         type: String,
@@ -79,14 +79,14 @@ userSchema.pre('save', async function (next) {
   }
 });
 
-userSchema.pre('findOneAndUpdate', async function (next) {
-  try {
-    this.set('updatedAt', Date.now);
-    next();
-  } catch (error) {
-    next(error);
-  }
-});
+// userSchema.pre('findOneAndUpdate', async function (next) {
+//   try {
+//     this.set('updatedAt', Date.now);
+//     next();
+//   } catch (error) {
+//     next(error);
+//   }
+// });
 
 const UserModel = mongoose.model.UserModel || mongoose.model('UserModel', userSchema);
 module.exports = { UserModel };

@@ -11,7 +11,7 @@ const {
   loginUserService,
   checkRefreshToken,
   createUserService,
-  findUserByPhoneAndPasswordBscryptService,
+  findUserByPhoneAndPasswordBcryptService,
 } = require('../services/auth.service');
 const { genToken } = require('../services/jwtToken.service');
 const { findUserByIdService } = require('../services/user.service');
@@ -53,6 +53,10 @@ const createOTPEmail = async (req, resp, next) => {
         .status(StatusCodes.CREATED)
         .json({ message: `OTP sent successfully to ${errorMessage.toLowerCase()} ${contact}` });
     }
+
+    resp.status(StatusCodes.CONFLICT).json({
+      message: 'Email or phone number already exists, please try again with another one.',
+    });
   } catch (error) {
     next(error);
   }
@@ -69,14 +73,14 @@ const verifyOTP = async (req, resp, next) => {
     }
 
     // Kiểm tra tính hợp lệ của OTP
-    const isValidOtp = await isValidOTPService(otp, lastOtp.otp);
+    const isValidOtp = await isValidOTPService(String(otp), lastOtp.otp);
     if (!isValidOtp) {
       return resp.status(StatusCodes.BAD_REQUEST).json({ message: 'Invalid OTP' });
     }
 
     // Nếu mã OTP hợp lệ và contact khớp với lastOtp.contact, thực hiện xóa mã OTP theo contact
     if (isValidOtp && contact === lastOtp.contact) {
-      deleteManyOTPService(contact);
+      deleteManyOTPService(contact).then();
       return resp.status(StatusCodes.OK).json({ message: 'OTP Verified' });
     } else {
       return resp.status(StatusCodes.BAD_REQUEST).json({ message: 'Invalid OTP' });
@@ -148,7 +152,7 @@ const loginAuthenticateWithEncryptedCredentials = async (req, resp, next) => {
   try {
     const userId = req.body.userId;
     const password = req.body.password;
-    const user = await findUserByPhoneAndPasswordBscryptService({ userId, password });
+    const user = await findUserByPhoneAndPasswordBcryptService({ userId, password });
     // TODO: Kiểm tra nếu tài khoản bị xóa
     // if (user.deleted) {
     //     resp.status(StatusCodes.OK).json({
@@ -221,7 +225,7 @@ const refreshToken = async (req, resp, next) => {
       throw httpErrors.Unauthorized('Please login to continue');
     }
     const check = await checkRefreshToken(refreshToken, process.env.REFRESH_TOKEN_KEY);
-    const user = await findUser(check.userId);
+    const user = await findUserByIdService(check.userId);
     const accessToken = await genToken({ userId: user._id }, process.env.ACCESS_TOKEN_KEY, '7d');
     resp.status(201).json({ accessToken, user });
   } catch (error) {
@@ -264,6 +268,10 @@ const forgotpassword = async (req, resp, next) => {
         .status(StatusCodes.CREATED)
         .json({ message: `OTP sent successfully to ${errorMessage.toLowerCase()} ${contact}` });
     }
+
+    resp.status(StatusCodes.CONFLICT).json({
+      message: 'The email or phone number is not in use, please try again with another number.',
+    });
   } catch (error) {
     next(error);
   }

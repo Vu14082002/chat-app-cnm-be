@@ -31,7 +31,7 @@ const createUserService = async (userInfo) => {
     const userSaved = await new UserModel(userInfo).save();
     return userSaved;
   } catch (error) {
-    throw httpErrors.BadRequest('Server save User is Error, Plase Try again');
+    throw error;
   }
 };
 
@@ -43,7 +43,7 @@ const loginUserService = async (userLogin) => {
   }
   // compare password
   let errorMessage = 'Phone';
-  if (userInfo._id.includes('@')) {
+  if (user._id.includes('@')) {
     errorMessage = 'Email';
   }
   const checkPassword = await bcrypt.compare(password, user.password);
@@ -56,7 +56,7 @@ const checkRefreshToken = async (token, key) => {
   const check = await verifyToken(token, key);
   return check;
 };
-const findUserByPhoneAndPasswordBscryptService = async ({ userId, password }) => {
+const findUserByPhoneAndPasswordBcryptService = async ({ userId, password }) => {
   const userFind = await UserModel.findOne({ _id: userId, password });
   return userFind;
 };
@@ -64,5 +64,5 @@ module.exports = {
   createUserService,
   loginUserService,
   checkRefreshToken,
-  findUserByPhoneAndPasswordBscryptService,
+  findUserByPhoneAndPasswordBcryptService,
 };

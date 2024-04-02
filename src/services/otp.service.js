@@ -15,7 +15,7 @@ const createOTPService = async (contact, otp) => {
 };
 const getLastOTPService = async (contact) => {
   try {
-    const lastOtp = await OTPModel.find({ contact }).sort({ time: -1 }).limit(1);
+    const lastOtp = await OTPModel.findOne({ contact }).sort({ time: -1 });
     return lastOtp;
   } catch (error) {
     throw httpErrors.BadRequest('Some thing wrong, Please try again late');
