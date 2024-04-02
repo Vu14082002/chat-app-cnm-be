@@ -200,7 +200,7 @@ paths:
           description: Unauthorized - Invalid credentials
         '500':
           description: Internal server error
-  /auth/forgot-password':
+  /auth/forgot-password:
     post:
       tags:
         - 'authentication'
@@ -229,7 +229,7 @@ paths:
           description: Expired OTP | Invalid OTP
         '500':
           description: Internal server error
-  /auth/changePassword':
+  /auth/changePassword:
     post:
       tags:
         - 'authentication'
