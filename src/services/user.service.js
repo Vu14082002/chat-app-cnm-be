@@ -113,6 +113,14 @@ const getFriendListSortedByName = async (userId) => {
   }
 };
 
+const updateUserInfoService = async (user) => {
+  const { _id, ...rest } = user;
+
+  await UserModel.findOneAndUpdate({ _id }, { $set: rest });
+
+  return await UserModel.findOne({ _id });
+};
+
 module.exports = {
   findUserByIdService,
   findUserByContactOrNameRegex,
@@ -121,4 +129,5 @@ module.exports = {
   addNewFriend,
   deleteFriendById,
   getFriendListSortedByName,
+  updateUserInfoService,
 };
