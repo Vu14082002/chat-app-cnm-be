@@ -11,6 +11,11 @@ const cors = require('cors');
 const httpErrors = require('http-errors');
 const routes = require('./routes/index.js');
 const instanceMongoDb = require('./db/init.mongodb.js');
+const fs = require('fs');
+const YAML = require('yaml');
+const swaggerUi = require('swagger-ui-express');
+const file = fs.readFileSync('./swagger.yaml', 'utf8');
+const swaggerDocument = YAML.parse(file);
 // -------------------------------------------------------
 // config dotenv
 dotenv.config();
@@ -32,17 +37,7 @@ app.use(compression());
 // them cho biet' vay thoi, du an nay ko can ::) do~ phien'
 // app.use(cors({ origin: 'http://localhost:3000' }));
 app.use(cors());
-
-// app.post('/api/v1/sendSMS', async (req, res) => {
-//   locals = {
-//     name: 'Vu Nguyen',
-//     appLink: 'https link web',
-//     OTP: await createOTP(),
-//     resetLink: 'link Reset',
-//   };
-//   sendEmail('verifyEmail', 'nguyenvanvu20020814@gmail.com', locals);
-// });
-
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 app.use('/api/v1', routes);
 
 // Error

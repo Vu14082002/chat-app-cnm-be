@@ -17,7 +17,6 @@ const upload = multer({ storage });
 
 userRouter.route('/').get(trimRequest.all, checkAuthorized, findUserByPhone);
 userRouter.route('/info').get(trimRequest.all, checkAuthorized, userInfo);
-
 userRouter.route('/addfriend').post(trimRequest.all, checkAuthorized, addfriend);
 userRouter.route('/deletefriend').delete(trimRequest.all, checkAuthorized, deleteFriend);
 userRouter.route('/updateAvatar').post(checkAuthorized, upload.single('avatar'), updateAvatar);

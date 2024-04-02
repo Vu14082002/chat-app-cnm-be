@@ -8,7 +8,6 @@ const {
   loginAuthenticateWithEncryptedCredentials,
   createOTP,
   verifyOTP,
-  forgotpassword,
   forgotPassword,
   changePassword,
 } = require('../controllers/auth.controller');
@@ -18,13 +17,11 @@ const authRoutes = express.Router();
 
 authRoutes.route('/createOTP').post(trimRequest.all, createOTP);
 authRoutes.route('/verifyOTP').post(trimRequest.all, verifyOTP);
-// [ ] QRCode
 authRoutes.route('/register').post(trimRequest.all, register);
 authRoutes
   .route('/loginWithEncrypted')
   .post(trimRequest.all, loginAuthenticateWithEncryptedCredentials);
 authRoutes.route('/login').post(trimRequest.all, login);
-authRoutes.route('/forgotpassword').post(trimRequest.all, forgotpassword);
 authRoutes.route('/forgot-password').post(trimRequest.all, forgotPassword);
 authRoutes.route('/logout').post(trimRequest.all, logout);
 authRoutes.route('/refreshToken').post(trimRequest.all, refreshToken);

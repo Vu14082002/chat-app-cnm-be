@@ -1,0 +1,257 @@
+openapi: 3.0.0
+info:
+  title: Chat App API
+  description: API for managing conversations, messages, users, and authentication in the Chat App.
+  version: 1.0.0
+servers:
+  - url: http://localhost:4000/api/v1
+tags:
+  - name: authentication
+paths:
+  /auth/createOTP:
+    post:
+      tags:
+        - 'authentication'
+      summary: Create OTP for user authentication
+      operationId: createOTP
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                contact:
+                  type: string
+                  description: Email or Phone of the user
+      responses:
+        '201':
+          description: OTP sent successfully
+        '409':
+          description: Email or phone number already exists
+        '500':
+          description: Failed to create OTP
+
+  /auth/verifyOTP:
+    post:
+      tags:
+        - 'authentication'
+      summary: Verify OTP for user authentication
+      operationId: verifyOTP
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                contact:
+                  type: string
+                  description: Email or Phone of the user
+                otp:
+                  type: string
+                  description: OTP System send
+      responses:
+        '200':
+          description: OTP Verified
+        '400':
+          description: Expired or Invalid OTP
+        '500':
+          description: Internal server error
+  /auth/register:
+    post:
+      tags:
+        - 'authentication'
+      summary: Register a new user
+      operationId: registerUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                contact:
+                  type: string
+                  description: Email or Phone of the user
+                name:
+                  type: string
+                  description: name of user
+                password:
+                  type: string
+                  description: password of user
+                dateOfBirth:
+                  type: string
+                  description: dateOfBirth of user
+                gender:
+                  type: string
+                  description: dateOfBirth of user (male or female)
+      responses:
+        '201':
+          description: User registered successfully
+        '400':
+          description: Phone or email have been register
+        '500':
+          description: Internal server error
+  /auth/login:
+    post:
+      tags:
+        - 'authentication'
+      summary: Login with username and password
+      operationId: loginUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                contact:
+                  type: string
+                  description: Email or Phone of the user
+                password:
+                  type: string
+                  description: password of user
+      responses:
+        '200':
+          description: User logged in successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  accessToken:
+                    type: string
+                    description: JWT authentication token
+                  user:
+                    type: object
+        '400':
+          description: The phone or password you entered is incorrect
+        '500':
+          description: Internal server error
+  /auth/loginWithEncrypted:
+    post:
+      tags:
+        - 'authentication'
+      summary: Login with contact and password
+      operationId: loginUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                contact:
+                  type: string
+                  description: Email or Phone of the user
+                password:
+                  type: string
+                  description: password of user
+      responses:
+        '200':
+          description: User logged in successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  accessToken:
+                    type: string
+                    description: JWT authentication token
+                  user:
+                    type: object
+        '401':
+          description: Unauthorized - Invalid credentials
+        '500':
+          description: Internal server error
+  /auth/logout:
+    post:
+      tags:
+        - 'authentication'
+      summary: Logout user
+      operationId: logoutUser
+      responses:
+        '200':
+          description: User logged out successfully
+        '500':
+          description: Internal server error
+  /auth/refreshToken:
+    post:
+      tags:
+        - 'authentication'
+      summary: refreshTokens
+      operationId: refreshTokens
+      responses:
+        '201':
+          description: User logged in successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accessToken:
+                    type: string
+        '401':
+          description: Unauthorized - Invalid credentials
+        '500':
+          description: Internal server error
+  /auth/forgot-password':
+    post:
+      tags:
+        - 'authentication'
+      summary: Change user password
+      operationId: changePassword
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                contact:
+                  type: string
+                  description: Email or Phone of the user
+                otp:
+                  type: string
+                  description: otp of contact
+                password:
+                  type: string
+                  description: password of user
+      responses:
+        '200':
+          description: Password changed successfully
+        '400':
+          description: Expired OTP | Invalid OTP
+        '500':
+          description: Internal server error
+  /auth/changePassword':
+    post:
+      tags:
+        - 'authentication'
+      summary: Change user password
+      operationId: changePassword
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                oldPassword:
+                  type: string
+                  description: password old
+                newPassword:
+                  type: string
+                  description: new password
+      responses:
+        '200':
+          description: Password changed successfully
+        '400':
+          description: Expired OTP | Invalid OTP
+        '500':
+          description: Internal server error
