@@ -12,6 +12,7 @@ const {
   checkRefreshToken,
   createUserService,
   findUserByPhoneAndPasswordBcryptService,
+  changePasswordService,
 } = require('../services/auth.service');
 const { genToken } = require('../services/jwtToken.service');
 const { findUserByIdService } = require('../services/user.service');
@@ -277,6 +278,67 @@ const forgotpassword = async (req, resp, next) => {
   }
 };
 
+const forgotPassword = async (req, resp, next) => {
+  const { contact, otp, password } = req.body;
+
+  if (!contact)
+    return resp.status(StatusCodes.BAD_REQUEST).json({ message: 'Contact is required' });
+
+  if (!otp) return resp.status(StatusCodes.BAD_REQUEST).json({ message: 'OTP is required' });
+
+  if (!password)
+    return resp.status(StatusCodes.BAD_REQUEST).json({ message: 'Password is required' });
+
+  try {
+    const lastOtp = await getLastOTPService(contact);
+
+    // Kiểm tra xem lastOtp có tồn tại hay không để xác định xem OTP đã hết hạn chưa
+    if (!lastOtp) {
+      return resp.status(StatusCodes.BAD_REQUEST).json({ message: 'Expired OTP' });
+    }
+
+    // Kiểm tra tính hợp lệ của OTP
+    const isValidOtp = await isValidOTPService(String(otp), lastOtp.otp);
+    if (!isValidOtp) {
+      return resp.status(StatusCodes.BAD_REQUEST).json({ message: 'Invalid OTP' });
+    }
+
+    // Nếu mã OTP hợp lệ và contact khớp với lastOtp.contact, thực hiện xóa mã OTP theo contact
+    if (isValidOtp && contact === lastOtp.contact) {
+      deleteManyOTPService(contact).then();
+      const user = await findUserByIdService(contact);
+      user.password = password;
+      await user.save();
+      return resp.status(StatusCodes.OK).json({ message: 'Password changed successfully' });
+    }
+
+    resp
+      .status(StatusCodes.BAD_REQUEST)
+      .json({ message: 'There were some errors, please try again' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const changePassword = async (req, resp, next) => {
+  const { oldPassword, newPassword } = req.body;
+  const userId = req.user.userId;
+
+  if (!oldPassword)
+    return resp.status(StatusCodes.BAD_REQUEST).json({ message: 'Old password is required' });
+
+  if (!newPassword)
+    return resp.status(StatusCodes.BAD_REQUEST).json({ message: 'New password is required' });
+
+  try {
+    await changePasswordService(userId, oldPassword, newPassword);
+
+    return resp.status(StatusCodes.OK).json({ message: 'Password changed successfully' });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   login,
   register,
@@ -286,4 +348,6 @@ module.exports = {
   createOTPEmail,
   verifyOTP,
   forgotpassword,
+  forgotPassword,
+  changePassword,
 };

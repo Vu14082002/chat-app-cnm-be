@@ -60,9 +60,24 @@ const findUserByPhoneAndPasswordBcryptService = async ({ userId, password }) => 
   const userFind = await UserModel.findOne({ _id: userId, password });
   return userFind;
 };
+
+const changePasswordService = async (userId, oldPassword, newPassword) => {
+  const user = await UserModel.findOne({ _id: userId });
+
+  if (!user) throw httpErrors.NotFound('User not found');
+
+  const checkPassword = await bcrypt.compare(oldPassword, user.password);
+
+  if (!checkPassword) throw httpErrors.BadRequest('Old password is incorrect');
+
+  user.password = newPassword;
+  return await user.save();
+};
+
 module.exports = {
   createUserService,
   loginUserService,
   checkRefreshToken,
   findUserByPhoneAndPasswordBcryptService,
+  changePasswordService,
 };
