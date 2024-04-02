@@ -18,7 +18,7 @@ const { genToken } = require('../services/jwtToken.service');
 const { findUserByIdService } = require('../services/user.service');
 const { StatusCodes } = require('http-status-codes');
 const { sendEmail } = require('../helpers/mail.transport');
-const createOTPEmail = async (req, resp, next) => {
+const createOTP = async (req, resp, next) => {
   try {
     const contact = req.body.contact;
     let errorMessage = 'Phone';
@@ -151,9 +151,8 @@ const login = async (req, resp, next) => {
 };
 const loginAuthenticateWithEncryptedCredentials = async (req, resp, next) => {
   try {
-    const userId = req.body.userId;
-    const password = req.body.password;
-    const user = await findUserByPhoneAndPasswordBcryptService({ userId, password });
+    const { password, contact } = req.body;
+    const user = await findUserByPhoneAndPasswordBcryptService(contact, password);
     // TODO: Kiểm tra nếu tài khoản bị xóa
     // if (user.deleted) {
     //     resp.status(StatusCodes.OK).json({
@@ -345,7 +344,7 @@ module.exports = {
   logout,
   refreshToken,
   loginAuthenticateWithEncryptedCredentials,
-  createOTPEmail,
+  createOTP,
   verifyOTP,
   forgotpassword,
   forgotPassword,

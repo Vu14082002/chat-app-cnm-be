@@ -56,8 +56,8 @@ const checkRefreshToken = async (token, key) => {
   const check = await verifyToken(token, key);
   return check;
 };
-const findUserByPhoneAndPasswordBcryptService = async ({ userId, password }) => {
-  const userFind = await UserModel.findOne({ _id: userId, password });
+const findUserByPhoneAndPasswordBcryptService = async (contact, password) => {
+  const userFind = await UserModel.findOne({ _id: contact, password });
   return userFind;
 };
 

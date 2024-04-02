@@ -6,17 +6,17 @@ const {
   logout,
   refreshToken,
   loginAuthenticateWithEncryptedCredentials,
-  createOTPEmail,
+  createOTP,
   verifyOTP,
   forgotpassword,
   forgotPassword,
-  changePassword
+  changePassword,
 } = require('../controllers/auth.controller');
 const trimRequest = require('trim-request');
 const { checkAuthorized } = require('../middlewares/auth.middleware');
 const authRoutes = express.Router();
 
-authRoutes.route('/createOTPEmail').post(trimRequest.all, createOTPEmail);
+authRoutes.route('/createOTP').post(trimRequest.all, createOTP);
 authRoutes.route('/verifyOTP').post(trimRequest.all, verifyOTP);
 // [ ] QRCode
 authRoutes.route('/register').post(trimRequest.all, register);
