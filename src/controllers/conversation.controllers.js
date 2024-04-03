@@ -1,6 +1,6 @@
 const { request, response } = require('express');
 const logger = require('../logger');
-const httpStatusCodes = require('http-status-codes');
+const { StatusCodes } = require('http-status-codes');
 const createHttpError = require('http-errors');
 const {
   checkExistConversation,
@@ -21,23 +21,22 @@ const openConversation = async (req = request, resp = response, next) => {
     // check conversation is exsist
     const resultCheck = await checkExistConversation(senderUserId, receiverUserId);
     if (resultCheck) {
-      resp.json(resultCheck);
-    } else {
-      let userReceived = await findUserByIdService(receiverUserId);
-      let conversationData = {
-        name: userReceived.name,
-        picture: userReceived.avatar,
-        isGroup: false,
-        users: [senderUserId, receiverUserId],
-      };
-      const conversationSaved = await createConversation(conversationData);
-      const populateConversationData = await populateConversation(
-        conversationSaved._id,
-        'users',
-        '-password'
-      );
-      resp.status(httpStatusCodes.StatusCodes.CREATED).json(populateConversationData);
+      return resp.status(StatusCodes.OK).json(resultCheck);
     }
+    let userReceived = await findUserByIdService(receiverUserId);
+    let conversationData = {
+      name: userReceived.name,
+      picture: userReceived.avatar,
+      isGroup: false,
+      users: [senderUserId, receiverUserId],
+    };
+    const conversationSaved = await createConversation(conversationData);
+    const populateConversationData = await populateConversation(
+      conversationSaved._id,
+      'users',
+      '-password'
+    );
+    return resp.status(StatusCodes.CREATED).json(populateConversationData);
   } catch (error) {
     next(error);
   }

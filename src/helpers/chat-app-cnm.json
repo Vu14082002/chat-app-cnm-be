@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "chat-app-cnm-team20",
+  "private_key_id": "014c395a4e51e01eba624734b8a12d2fb1fc78a4",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDR0Krp+zHmpxeL\njmZ8K0u6T1OyAX4B5vpxj93+zT5HD+buhGxf0C3K/+wBsO530yH5It6xHkhbMRr2\nSAdGPG6Jc3kplYL2RayY86qpwJyv3jDbx91ui2HmL/0HPb48w6p1F4G9NUziAb70\n6SPm5PNHXf26vWCN/r65dC8bXhI/eQqD3ryj+hD8ynUzmsjjbjEdRUGh8dAzhW+5\nlf7OluZgDpSjyUsNqFZnTPgvdz/PRAwgxcrAE2wNqwZlAJp5LX1QPgmm0Fb++Mrz\nq2KBx9qqXKQeWDNx0mzTVhxNVPzgoWSIgWKwCz4VcMKwjWMWwN7usLtLSWKdqix3\nEMqqUYmdAgMBAAECggEABg1paL98xIUMalOsxCcxk4nHRcrCOkbR8aWvRzLfeYhN\nZpL+V1M3hvQT+EaE0oMOJ1QorV5MwwirGPCh+RY0MBXbKGZuNTF0VaMtyKDMREx6\nB1UAH7i4lb3LpEJVMwaH68HGVdFsSta3DfSNuxLeq6/b6l+dIet3z/y4gScZCqij\nSRZTDJkMIameIvAEJkWIFnMJlA2zjUm5a0lsvTSL3B26LpBX9R5vEMEPngWQ7mTy\nv2WxvYpnqHyR0sjE8GFGz0eDtuFH3lSvkJ6mlUq9K+pfVgbwQxD8LUHzh2+xM/rr\n62v4uKOLGnEK76m0arMwsFAiyezNOcAaYLoR4K2l9wKBgQD7f9Bt77r83dzE1+3t\ngX4FHCQL/1OaUjucn6K2kjtZmNoZ14x0FWpcRABEOl6uVYAsPZuhd1ZD7Q+Zy/H5\ne6/DOwz5MIXjumKEiuXjRqBvCovC1HhBVRRXnc5xssX+mPoNAIA1fsPlspzgtvIM\nGuOgt0UOIKzE+Ey2eB7pbUeu0wKBgQDVkeMXiI/1FSUZs+BwGITxcML1KnfObNzb\nKDCfBLtHW0SwYd3YDt71k3kRhGghW7g1sWhu2uYGWzXjttXti+rYRcLn634CYqQ8\nnjsTlbPIKKVPdh4ybufB5Yz5+LV/6lYswv35lbhQvLkFBPZlFG1n/cIOhVOsziXb\nLFDKdI3/zwKBgFriRmzj+/uTJUuRCG8So3qvP6uCOjEDVH12BrPZRk9LeE1sYlo0\nvvnWrQ361epEBYx3Ov1vhaIIUeHvHGNeuhZgCYEncsrnuOBS3V5zUFiwQ+9FHqvl\nVfOPmGHoC7rEh2AZdTtfsuUX1a8zDWcodGfIstC3KBgJ7pbl863BCu13AoGAFL7N\nDlYnlajuJ6b/YCQhlcpcRbBQXu7YLTmkL24oOvA0peV7xSb8pWIj2n3AF61vIVgQ\nSuRcf7WQcIQsF50FvOhZ3GlVnimyxmigWHCsO/8mv6c7m66GOKFxpj5wcvJyWHrA\nbOQMOVt7pW8r9/mZ/wX5OavdyuVja/zMBD56JKUCgYEAnxHN9ue5q3Kht0CR6aLk\nrPGGWXFp+HnwNJzh5hKWKFSAaoOqNHGgYIUWl6+ot95VF1BHQUBotujyMsTkkCE2\n5pFBZ+tG9kR+XXjZsFRrEh7nP635yiH0BFayeBKRuNO+I4dSH0x0N9JF8x+QbcEh\n0IYg3eEI4dyELBcssoys2C4=\n-----END PRIVATE KEY-----\n",
+  "client_email": "checkimagecloud-vision-api@chat-app-cnm-team20.iam.gserviceaccount.com",
+  "client_id": "104533092384949032012",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/checkimagecloud-vision-api%40chat-app-cnm-team20.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}

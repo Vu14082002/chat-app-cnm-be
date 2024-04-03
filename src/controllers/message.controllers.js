@@ -1,5 +1,6 @@
 const { request, response } = require('express');
 const { StatusCodes } = require('http-status-codes');
+const fs = require('fs');
 const {
   createMessage,
   messagePopulate,
@@ -7,29 +8,64 @@ const {
   getReplyMessages: getReplyMessagesService,
 } = require('../services/message.service');
 const { updateLastMessage } = require('../services/conversation.service');
+const { uploadToS3 } = require('../helpers/uploadToS3.helper');
+const { convertToBinary } = require('../helpers/converFile');
+const { checkValidImg } = require('../helpers/checkValidImg');
 
-const sendMessage = async (req = request, resp = response, next) => {
+const sendMessage = async (req, resp, next) => {
   try {
     const userId = req.user.userId;
-    const { messages, files, conversationId, reply, sticker } = req.body;
-    if ((!messages && files) || !conversationId) {
+    const { messages, conversationId, reply, sticker } = req.body;
+    const files = req.files;
+    const failedUploads = [];
+    const successfulUploads = [];
+    const invalidFiles = [];
+
+    if ((!messages && !files) || !conversationId) {
       return resp
         .status(StatusCodes.BAD_REQUEST)
-        .json('Please provide a conversationId and message');
+        .json('Please provide a conversationId and message or file');
     }
-
+    if (files && req.files.length > 0) {
+      for (const file of files) {
+        try {
+          const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp'];
+          const uploadedFile = await uploadToS3(file);
+          const fileExtension = uploadedFile.split('.').pop().toLowerCase();
+          if (imageExtensions.includes(fileExtension)) {
+            const checkImg = await checkValidImg(uploadedFile);
+            if (!checkImg) {
+              invalidFiles.push(file.originalname);
+            } else {
+              successfulUploads.push(uploadedFile);
+            }
+          } else {
+            successfulUploads.push(uploadedFile);
+          }
+        } catch (error) {
+          // TODO: conver to binary và check chua lam
+          // try {
+          //   const dataUri = await convertToBinary(file);
+          //   successfulUploads.push(dataUri);
+          // } catch (error) {
+          //   console.error('Error occurred while converting file to Binary:', error);
+          //   failedUploads.push(file.originalname);
+          // }
+        }
+      }
+    }
     const messageData = {
       sender: userId,
       messages: messages || [],
       conversation: conversationId,
-      files: files || [],
+      files: successfulUploads || [],
       reply,
       sticker,
     };
     const messageSaved = await createMessage(messageData);
-    const messagepopo = await messagePopulate(messageSaved._id);
+    const message = await messagePopulate(messageSaved._id);
     await updateLastMessage(conversationId, messageSaved);
-    resp.status(StatusCodes.OK).json(messagepopo);
+    resp.status(StatusCodes.OK).json({ message, invalidFiles, failedUploads });
   } catch (error) {
     next(error);
   }

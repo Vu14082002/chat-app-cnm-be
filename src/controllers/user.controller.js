@@ -5,7 +5,7 @@ const {
   findUserByContactOrNameRegex,
   findUserById,
   updateAvatarURL,
-  addNewFriend,
+  sendFriendRequest,
   deleteFriendById,
   updateUserInfoService,
 } = require('../services/user.service');
@@ -66,7 +66,7 @@ const addfriend = async (req, resp, next) => {
   try {
     const userId = req.user.userId;
     const { friendId } = req.body;
-    const result = await addNewFriend(userId, friendId);
+    const result = await sendFriendRequest(userId, friendId);
     if (!result) {
       return resp.status(StatusCodes.BAD_REQUEST).json(result);
     }

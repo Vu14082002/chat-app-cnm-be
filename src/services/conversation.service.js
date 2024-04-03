@@ -13,7 +13,7 @@ const checkExistConversation = async (senderUserId, receiverUserId) => {
     .populate('users', '-password')
     .populate('lastMessage');
   if (!conversationList) {
-    throw createHttpError.BadRequest('Some thing wrong, Try again');
+    return null;
   }
   conversationList = await UserModel.populate(conversationList, {
     path: 'lastMessage.sender',

@@ -28,6 +28,7 @@ const messageSchema = mongoose.Schema(
       ref: 'ConversationModel',
     },
     files: [],
+    errorName: [],
     sticker: {
       type: String,
     },

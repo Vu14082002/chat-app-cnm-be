@@ -1,9 +1,12 @@
 const httpErrors = require('http-errors');
 const { UserModel } = require('../models/user.model');
+const { sendNotification } = require('./notification.services');
 
 // find user by id
 const findUserByIdService = async (id) => {
   const userFind = await UserModel.findById(id);
+  console.log('------------------------');
+  console.log(userFind);
   return userFind;
 };
 
@@ -45,38 +48,63 @@ const updateAvatarURL = async (userId, avatarUrl) => {
   }
 };
 
-const addNewFriend = async (userId, friendId) => {
-  console.log(userId, '--------------------', friendId);
-  const session = await UserModel.startSession();
-  session.startTransaction();
+// TODO: Lêm thêm gừi notification
+const sendFriendRequest = async (senderId, receiverId) => {
+  const existingRequest = await FriendModel.findOne({
+    sender_id: senderId,
+    receiver_id: receiverId,
+    status: 'pending',
+  });
+  const reverseRequest = await FriendModel.findOne({
+    sender_id: receiverId,
+    receiver_id: senderId,
+    status: 'pending',
+  });
+  if (existingRequest) {
+    if (reverseRequest) {
+      await FriendModel.updateMany(
+        {
+          $or: [
+            { sender_id: senderId, receiver_id: receiverId },
+            { sender_id: receiverId, receiver_id: senderId },
+          ],
+          status: 'pending',
+        },
+        { status: 'accepted' }
+      );
+      sendNotification(receiverId, 'Bạn có môt yêu cầu kết bạn');
+      return true;
+    }
+    return false;
+  }
+
+  await FriendModel.create({ sender_id: senderId, receiver_id: receiverId });
+  sendNotification(receiverId, 'Bạn có môt yêu cầu kết bạn');
+
+  return true;
+};
+// TODO: chưa check
+const confirmFriendRequest = async (userId, friendId) => {
   try {
-    const opts = { session, new: true };
-    const user = await UserModel.findOneAndUpdate(
-      { _id: userId, friends: { $nin: friendId } },
-      { $addToSet: { friends: friendId } },
-      opts
-    );
+    // Tìm yêu cầu kết bạn từ cả hai phía
+    const friendRequest = await FriendModel.findOne({
+      $or: [
+        { sender_id: userId, receiver_id: friendId },
+        { sender_id: friendId, receiver_id: userId },
+      ],
+    });
 
-    if (!user) {
-      throw new Error({ success: false, message: 'Không thể thêm bạn' });
+    if (!friendRequest || friendRequest.status !== 'pending') {
+      return null;
     }
 
-    const friend = await UserModel.findOneAndUpdate(
-      { _id: friendId, friends: { $nin: userId } },
-      { $addToSet: { friends: userId } },
-      opts
-    );
-    if (!friend) {
-      throw new Error({ success: false, message: 'Không thể thêm bạn' });
-    }
+    await FriendModel.findByIdAndUpdate(friendRequest._id, { status: 'accepted' });
 
-    await session.commitTransaction();
-    session.endSession();
-    return { success: true, user, friend };
+    return true;
   } catch (error) {
-    await session.abortTransaction();
-    session.endSession();
-    throw new Error(error);
+    // Xử lý lỗi nếu có
+    console.error('Error confirming friend request:', error);
+    throw new Error('Failed to confirm friend request. Please try again later.');
   }
 };
 
@@ -126,8 +154,9 @@ module.exports = {
   findUserByContactOrNameRegex,
   findUserById,
   updateAvatarURL,
-  addNewFriend,
+  sendFriendRequest,
   deleteFriendById,
   getFriendListSortedByName,
   updateUserInfoService,
+  confirmFriendRequest,
 };
