@@ -21,7 +21,7 @@ const sendMessage = async (req, resp, next) => {
     const successfulUploads = [];
     const invalidFiles = [];
 
-    if ((!messages && !files) || !conversationId) {
+    if (![messages?.length, sticker, files?.length].some(Boolean) || !conversationId) {
       return resp
         .status(StatusCodes.BAD_REQUEST)
         .json('Please provide a conversationId and message or file');

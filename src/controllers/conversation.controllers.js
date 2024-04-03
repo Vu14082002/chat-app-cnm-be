@@ -46,7 +46,7 @@ const getConversations = async (req = request, resp = response) => {
   try {
     const userId = req.user.userId;
     const conversations = await getListUserConversations(userId);
-    resp.status(httpStatusCodes.StatusCodes.OK).json(conversations);
+    resp.status(StatusCodes.OK).json(conversations);
   } catch (error) {
     throw createHttpError.BadRequest('Some thing wrong, Try agian');
   }
