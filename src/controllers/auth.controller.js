@@ -235,50 +235,51 @@ const refreshToken = async (req, resp, next) => {
     next(error);
   }
 };
-// const forgotpassword = async (req, resp, next) => {
-//   try {
-//     const contact = req.body.contact;
-//     let errorMessage = 'Phone';
-//     if (contact.includes('@')) {
-//       errorMessage = 'Email';
-//     }
+const forgotpassword = async (req, resp, next) => {
+    try {
+        const contact = req.body.contact;
+        let errorMessage = 'Phone';
+        if (contact.includes('@')) {
+            errorMessage = 'Email';
+        }
 
-//     const userFind = await findUserByIdService(contact);
+        const userFind = await findUserByIdService(contact);
 
-//     // Nếu tìm thấy người dùng
-//     if (userFind) {
-//       const otp = await OtpGenerator();
-//       const result = await createOTPService(contact, otp);
-//       if (!result) {
-//         return resp
-//           .status(StatusCodes.INTERNAL_SERVER_ERROR)
-//           .json({ message: 'Failed to create OTP, please try later....' });
-//       }
-//       if (errorMessage === 'Email') {
-//         const locals = {
-//           appLink: process.env.FE_LINK,
-//           OTP: otp,
-//           title: '',
-//         };
+        // Nếu tìm thấy người dùng
+        if (userFind) {
+            const otp = await OtpGenerator();
+            const result = await createOTPService(contact, otp);
+            if (!result) {
+                return resp.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+                    message: 'Failed to create OTP, please try later....',
+                });
+            }
+            if (errorMessage === 'Email') {
+                const locals = {
+                    appLink: process.env.FE_LINK,
+                    OTP: otp,
+                    title: '',
+                };
 
-//         const subject = 'Forgot Password Web CHAT APP CNM';
-//         await sendEmail('verifyEmail', contact, subject, locals);
-//       } else {
-//         // OTP phone later
-//         // TODO: Send OTP phone
-//       }
-//       return resp
-//         .status(StatusCodes.CREATED)
-//         .json({ message: `OTP sent successfully to ${errorMessage.toLowerCase()} ${contact}` });
-//     }
+                const subject = 'Forgot Password Web CHAT APP CNM';
+                await sendEmail('verifyEmail', contact, subject, locals);
+            } else {
+                // OTP phone later
+                // TODO: Send OTP phone
+            }
+            return resp.status(StatusCodes.CREATED).json({
+                message: `OTP sent successfully to ${errorMessage.toLowerCase()} ${contact}`,
+            });
+        }
 
-//     resp.status(StatusCodes.CONFLICT).json({
-//       message: 'The email or phone number is not in use, please try again with another number.',
-//     });
-//   } catch (error) {
-//     next(error);
-//   }
-// };
+        resp.status(StatusCodes.CONFLICT).json({
+            message:
+                'The email or phone number is not in use, please try again with another number.',
+        });
+    } catch (error) {
+        next(error);
+    }
+};
 
 const forgotPassword = async (req, resp, next) => {
   const { contact, otp, password } = req.body;

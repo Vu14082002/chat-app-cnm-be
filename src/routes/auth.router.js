@@ -10,6 +10,7 @@ const {
   verifyOTP,
   forgotPassword,
   changePassword,
+  forgotpassword
 } = require('../controllers/auth.controller');
 const trimRequest = require('trim-request');
 const { checkAuthorized } = require('../middlewares/auth.middleware');
@@ -23,6 +24,7 @@ authRoutes
   .post(trimRequest.all, loginAuthenticateWithEncryptedCredentials);
 authRoutes.route('/login').post(trimRequest.all, login);
 authRoutes.route('/forgot-password').post(trimRequest.all, forgotPassword);
+authRoutes.route('/forgotpassword').post(trimRequest.all, forgotpassword);
 authRoutes.route('/logout').post(trimRequest.all, logout);
 authRoutes.route('/refreshToken').post(trimRequest.all, refreshToken);
 authRoutes.route('/changePassword').post(trimRequest.all, checkAuthorized, changePassword);
