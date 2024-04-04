@@ -6,6 +6,8 @@ const {
   messagePopulate,
   getConversationMessage,
   getReplyMessages: getReplyMessagesService,
+  deleteMessageForMeService,
+  deleteMessageAllService,
 } = require('../services/message.service');
 const { updateLastMessage } = require('../services/conversation.service');
 const { uploadToS3 } = require('../helpers/uploadToS3.helper');
@@ -31,16 +33,21 @@ const sendMessage = async (req, resp, next) => {
         try {
           const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp'];
           const uploadedFile = await uploadToS3(file);
+          const fileInfo = {
+            link: uploadedFile,
+            name: file.originalname,
+            type: file.mimetype,
+          };
           const fileExtension = uploadedFile.split('.').pop().toLowerCase();
           if (imageExtensions.includes(fileExtension)) {
             const checkImg = await checkValidImg(uploadedFile);
             if (!checkImg) {
               invalidFiles.push(file.originalname);
             } else {
-              successfulUploads.push(uploadedFile);
+              successfulUploads.push(fileInfo);
             }
           } else {
-            successfulUploads.push(uploadedFile);
+            successfulUploads.push(fileInfo);
           }
         } catch (error) {
           // TODO: conver to binary và check chua lam
@@ -94,5 +101,36 @@ const getReplyMessages = async (req = request, resp = response, next) => {
     next(error);
   }
 };
-
-module.exports = { sendMessage, getMessage, getReplyMessages };
+// const replyMessages = async (req, resp, next) => {
+//   const messageId = req.query.messageId;
+//   sendMessage;
+// };
+const deleteMessageForMe = async (req, resp, next) => {
+  try {
+    const messageId = req.body.messageId;
+    const senderId = req.user.userId;
+    await deleteMessageForMeService(senderId, messageId);
+    resp.status(StatusCodes.OK).json({ message: 'delete success' });
+  } catch (error) {
+    console.error(error);
+    next(error);
+  }
+};
+const deleteMessageForAll = async (req, resp, next) => {
+  try {
+    const messageId = req.body.messageId;
+    const senderId = req.user.userId;
+    await deleteMessageAllService(senderId, messageId);
+    return resp.status(StatusCodes.OK).json({ message: 'delete success' });
+  } catch (error) {
+    console.error(error);
+    next(error);
+  }
+};
+module.exports = {
+  sendMessage,
+  getMessage,
+  getReplyMessages,
+  deleteMessageForMe,
+  deleteMessageForAll,
+};

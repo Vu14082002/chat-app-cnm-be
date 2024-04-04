@@ -24,6 +24,11 @@ const messagePopulate = async (id) => {
         select: 'name avatar status',
         model: 'UserModel',
       },
+    })
+    .populate({
+      path: 'reply',
+      select: 'sender messages files sticker statuses deleted',
+      model: 'MessageModel',
     });
   if (!message) {
     throw createHttpError.BadRequest('Something wrong, pls Try again later');
@@ -74,9 +79,56 @@ const getReplyMessages = async (replyId) => {
   return messages;
 };
 
+const deleteMessageForMeService = async (sender, messageId) => {
+  let notFound;
+  try {
+    const messageDelete = await MessageModel.findOneAndUpdate(
+      { sender, _id: messageId, deleted: '0' },
+      { $set: { deleted: '1' } }
+    );
+    if (!messageDelete) {
+      notFound = createHttpError.BadRequest(
+        'senderId or messageId not found or message have been deleted'
+      );
+      throw notFound;
+    }
+    return true;
+  } catch (error) {
+    if (notFound) {
+      throw notFound;
+    }
+    throw createHttpError.InternalServerError('Delete message something wrong', error);
+  }
+};
+
+const deleteMessageAllService = async (sender, messageId) => {
+  let notFound;
+  try {
+    const messageDelete = await MessageModel.findOneAndUpdate(
+      { sender, _id: messageId, deleted: { $ne: '2' } },
+      { $set: { deleted: '2' } }
+    );
+
+    if (!messageDelete) {
+      notFound = createHttpError.BadRequest(
+        'senderId or messageId not found or message have been deleted'
+      );
+      throw notFound;
+    }
+    return true;
+  } catch (error) {
+    if (notFound) {
+      throw notFound;
+    }
+    throw createHttpError.InternalServerError('Delete message something wrong', error);
+  }
+};
+
 module.exports = {
   createMessage,
   messagePopulate,
   getConversationMessage,
   getReplyMessages,
+  deleteMessageForMeService,
+  deleteMessageAllService,
 };

@@ -27,14 +27,29 @@ const messageSchema = mongoose.Schema(
       type: ObjectId,
       ref: 'ConversationModel',
     },
-    files: [],
-    errorName: [],
+    files: [
+      {
+        link: {
+          type: String,
+          required: true,
+        },
+        name: {
+          type: String,
+          required: true,
+        },
+        type: {
+          type: String,
+          required: true,
+        },
+      },
+    ],
     sticker: {
       type: String,
     },
     reply: {
       type: ObjectId,
       ref: 'MessageModel',
+      default: null,
     },
     statuses: {
       type: [
@@ -53,6 +68,11 @@ const messageSchema = mongoose.Schema(
         },
       ],
       default: [],
+    },
+    deleted: {
+      type: String,
+      enum: ['0', '1', '2'],
+      default: '0',
     },
   },
   {

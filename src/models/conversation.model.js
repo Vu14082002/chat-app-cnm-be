@@ -48,10 +48,9 @@ const ConversationScheme = mongoose.Schema(
       type: ObjectId,
       ref: 'MessageModel',
     },
-    // qrCode: {
-    //   type: String,
-    //   required: true,
-    // },
+    qrCode: {
+      type: String,
+    },
     public: {
       type: Boolean,
       default: true,

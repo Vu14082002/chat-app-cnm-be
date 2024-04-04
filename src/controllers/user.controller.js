@@ -35,7 +35,6 @@ const userInfo = async (req, resp, next) => {
 };
 const updateAvatar = async (req, resp, next) => {
   try {
-    console.log(req.file);
     const userId = req.user.userId;
     const img = req.file.originalname.split('.')[1];
     const avatar = `${uuid.v4()}_${Date.now()}.${img}`;
@@ -52,8 +51,6 @@ const updateAvatar = async (req, resp, next) => {
         return resp.send('error fromm server: UPLOAD FILE IMG');
       }
       const avatarUrl = data.Location;
-      console.log('------------------------------------');
-      console.log(userId, '-------------', avatarUrl);
       const user = await updateAvatarURL(userId, avatarUrl);
       resp.status(StatusCodes.OK).json(user);
     });
