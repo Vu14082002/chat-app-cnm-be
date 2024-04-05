@@ -68,9 +68,14 @@ const ConversationScheme = mongoose.Schema(
       ],
       default: [],
     },
-    pin: {
-      type: Boolean,
-      default: false,
+    pinBy: {
+      type: [
+        {
+          type: String,
+          ref: 'UserModel',
+        },
+      ],
+      default: [],
     },
   },
 

@@ -38,50 +38,85 @@ const populateConversation = async (conversationId, field, fieldRemove) => {
   }
   return conversation;
 };
+
 const getListUserConversations = async (userId) => {
   let conversations;
-  await ConversationModel.find({
-    users: { $elemMatch: { $eq: userId } },
-  })
-    .populate('users', [
-      '-password',
-      '-qrCode',
-      '-background',
-      '-dateOfBirth',
-      '-createdAt',
-      '-updatedAt',
-    ])
-    .populate('admin', [
-      '-password',
-      '-qrCode',
-      '-background',
-      '-dateOfBirth',
-      '-createdAt',
-      '-updatedAt',
-    ])
-    .populate('lastMessage')
-    .sort({ updatedAt: -1 })
-    .then(async (data) => {
-      data = data.filter((conv) => conv.delete !== false);
-      data = await UserModel.populate(data, {
-        path: 'lastMessage.sender',
-        select: 'name avatar status',
-      });
-      conversations = data;
+  try {
+    conversations = await ConversationModel.find({
+      users: { $elemMatch: { $eq: userId } },
     })
-    .catch((error) => {
-      throw createHttpError.BadRequest('From getListUserConversations method');
+      .populate('users', [
+        '-password',
+        '-qrCode',
+        '-background',
+        '-dateOfBirth',
+        '-createdAt',
+        '-updatedAt',
+      ])
+      .populate('admin', [
+        '-password',
+        '-qrCode',
+        '-background',
+        '-dateOfBirth',
+        '-createdAt',
+        '-updatedAt',
+      ])
+      .populate('lastMessage');
+
+    // Sắp xếp danh sách cuộc trò chuyện dựa trên trường pinBy và updatedAt
+    conversations.sort((a, b) => {
+      const userAPinned = a.pinBy.includes(userId);
+      const userBPinned = b.pinBy.includes(userId);
+
+      if (userAPinned === userBPinned) {
+        return b.updatedAt - a.updatedAt;
+      }
+
+      return userBPinned - userAPinned;
     });
+
+    conversations = conversations.filter((conv) => conv.delete !== false);
+
+    conversations = await UserModel.populate(conversations, {
+      path: 'lastMessage.sender',
+      select: 'name avatar status',
+    });
+  } catch (error) {
+    console.error(error);
+    throw createHttpError.BadRequest('From getListUserConversations method');
+  }
   return conversations;
 };
+
 const updateLastMessage = async (conversationId, message) => {
-  const conversationUpdated = await ConversationModel.findByIdAndUpdate(conversationId, {
-    lastMessage: message,
-  });
-  if (!conversationUpdated) {
-    throw createHttpError.BadRequest('Something wrong, pls Try again later');
+  try {
+    const conversationUpdated = await ConversationModel.findByIdAndUpdate(conversationId, {
+      lastMessage: message,
+    });
+    if (!conversationUpdated) {
+      throw createHttpError.BadRequest('Something wrong, pls Try again later');
+    }
+    return conversationUpdated;
+  } catch (error) {
+    throw createHttpError.InternalServerError('updateLastMessage error, Try later');
   }
-  return conversationUpdated;
+};
+
+const pinConversationService = async ({ conversationId, userId }) => {
+  try {
+    const updatedConversation = await ConversationModel.findOneAndUpdate(
+      { _id: conversationId, users: { $in: [userId] }, pinBy: { $nin: [userId] } },
+      { $addToSet: { pinBy: userId } },
+      { new: true }
+    );
+    if (!updatedConversation) {
+      throw createHttpError.BadRequest('Invalid conversation or user is already pinned');
+    }
+    return true;
+  } catch (error) {
+    console.error(error);
+    throw createHttpError.InternalServerError('Failed to pin conversation', error);
+  }
 };
 
 module.exports = {
@@ -90,4 +125,5 @@ module.exports = {
   populateConversation,
   getListUserConversations,
   updateLastMessage,
+  pinConversationService,
 };

@@ -7,6 +7,7 @@ const {
   createConversation,
   populateConversation,
   getListUserConversations,
+  pinConversationService,
 } = require('../services/conversation.service');
 const { findUserByIdService } = require('../services/user.service');
 
@@ -42,13 +43,25 @@ const openConversation = async (req = request, resp = response, next) => {
   }
 };
 
-const getConversations = async (req = request, resp = response) => {
+const getConversations = async (req = request, resp = response, next) => {
   try {
     const userId = req.user.userId;
     const conversations = await getListUserConversations(userId);
     resp.status(StatusCodes.OK).json(conversations);
   } catch (error) {
-    throw createHttpError.BadRequest('Some thing wrong, Try agian');
+    next(error);
+  }
+};
+
+const pinConversation = async (req, resp, next) => {
+  try {
+    const conversationId = req.params.conversationId;
+    const userId = req.user.userId;
+    await pinConversationService({ conversationId, userId });
+    return resp.status(StatusCodes.OK).json({ message: 'pin success' });
+  } catch (error) {
+    console.error(error);
+    next(error);
   }
 };
 // const renameConVersation = async(req = request, resp = response) => {
@@ -60,4 +73,4 @@ const getConversations = async (req = request, resp = response) => {
 //         throw createHttpError.BadRequest('Some thing wrong, Try agian');
 //     }
 // };
-module.exports = { openConversation, getConversations };
+module.exports = { openConversation, getConversations, pinConversation };
