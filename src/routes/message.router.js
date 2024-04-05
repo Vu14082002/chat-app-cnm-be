@@ -8,6 +8,7 @@ const {
   getReplyMessages,
   deleteMessageForMe,
   deleteMessageForAll,
+  pingMessage,
 } = require('../controllers/message.controllers');
 // userRouter.route('/updateAvatar').post(checkAuthorized, upload.single('avatar'), updateAvatar);
 const { upload } = require('../configs/multer.config');
@@ -19,5 +20,6 @@ messageRouter
   .get(trimRequest.all, checkAuthorized, getMessage);
 messageRouter.route('/deleteForMe').post(trimRequest.all, checkAuthorized, deleteMessageForMe);
 messageRouter.route('/deleteForAll').post(trimRequest.all, checkAuthorized, deleteMessageForAll);
+messageRouter.route('/pin/:messageId').post(trimRequest.all, checkAuthorized, pingMessage);
 
 module.exports = { messageRouter };

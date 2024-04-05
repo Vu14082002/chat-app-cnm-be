@@ -68,6 +68,10 @@ const ConversationScheme = mongoose.Schema(
       ],
       default: [],
     },
+    pin: {
+      type: Boolean,
+      default: false,
+    },
   },
 
   {

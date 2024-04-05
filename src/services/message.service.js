@@ -1,5 +1,6 @@
 const createHttpError = require('http-errors');
 const { MessageModel } = require('../models/message.model');
+const { ConversationModel } = require('../models/conversation.model');
 
 const createMessage = async (messageData) => {
   let messageSaved = await MessageModel.create(messageData);
@@ -53,10 +54,24 @@ const getConversationMessage = async (conversationId, messageId) => {
         select: 'name avatar',
       },
     })
+    .populate({
+      path: 'conversation',
+      select: 'pinnedMessages -_id ',
+      model: 'ConversationModel',
+      populate: {
+        path: 'pinnedMessages',
+        select: 'sender messages files sticker -_id',
+        populate: {
+          path: 'sender',
+          select: 'name',
+          model: 'UserModel',
+        },
+      },
+    })
     .sort({ createdAt: -1 })
     .limit(process.env.MESSAGE_PER_PAGE);
   if (!message) {
-    throw createHttpError.BadRequest('conversationId is not contain');
+    throw createHttpError.NotFound('conversationId is not contain');
   }
   return message;
 };
@@ -124,6 +139,32 @@ const deleteMessageAllService = async (sender, messageId) => {
   }
 };
 
+const setPinMesssageService = async (messageId) => {
+  // TODO: kiem tra tin nhan da dc pin chua
+  try {
+    const message = await MessageModel.findById(messageId);
+    if (!message) {
+      return false;
+    }
+
+    const conversation = await ConversationModel.findOne({ _id: message.conversation });
+
+    if (conversation) {
+      if (conversation.pinnedMessages.length >= 3) {
+        conversation.pinnedMessages.pop();
+      }
+      conversation.pinnedMessages.unshift(message);
+      await conversation.save();
+
+      return conversation;
+    } else {
+      throw createHttpError.NotFound('Conversation not found');
+    }
+  } catch (error) {
+    throw createHttpError.InternalServerError('Pin message something wrong', error);
+  }
+};
+
 module.exports = {
   createMessage,
   messagePopulate,
@@ -131,4 +172,5 @@ module.exports = {
   getReplyMessages,
   deleteMessageForMeService,
   deleteMessageAllService,
+  setPinMesssageService,
 };
