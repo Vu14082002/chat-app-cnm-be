@@ -31,7 +31,8 @@ const messagePopulate = async (id) => {
       path: 'reply',
       select: 'sender messages files sticker statuses deleted',
       model: 'MessageModel',
-    });
+    })
+    .populate('location');
   if (!message) {
     throw createHttpError.BadRequest('Something wrong, pls Try again later');
   }

@@ -17,12 +17,13 @@ const { checkValidImg } = require('../helpers/checkValidImg');
 const sendMessage = async (req, resp, next) => {
   try {
     const userId = req.user.userId;
-    const { messages, conversationId, reply, sticker } = req.body;
+    const { messages, conversationId, reply, sticker, localtion } = req.body;
     const files = req.files;
     const failedUploads = [];
     const successfulUploads = [];
     const invalidFiles = [];
-    if (![messages?.length, sticker, files?.length].some(Boolean) || !conversationId) {
+    let invalidMessag = false;
+    if (![messages?.length, sticker, files?.length, localtion].some(Boolean) || !conversationId) {
       return resp
         .status(StatusCodes.BAD_REQUEST)
         .json('Please provide a conversationId and message or file');
@@ -68,11 +69,13 @@ const sendMessage = async (req, resp, next) => {
       files: successfulUploads || [],
       reply,
       sticker,
+      localtion,
     };
     const messageSaved = await createMessage(messageData);
     const message = await messagePopulate(messageSaved._id);
     await updateLastMessage(conversationId, messageSaved);
-    resp.status(StatusCodes.OK).json({ message, invalidFiles, failedUploads });
+    // TODO: check tin nhan trc khi gui
+    resp.status(StatusCodes.OK).json({ message, invalidFiles, failedUploads, invalidMessag });
   } catch (error) {
     next(error);
   }

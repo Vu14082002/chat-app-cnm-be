@@ -47,6 +47,10 @@ const messageSchema = mongoose.Schema(
         },
       },
     ],
+    localtion: {
+      type: Object,
+      default: null,
+    },
     sticker: {
       type: String,
     },
