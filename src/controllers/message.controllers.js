@@ -14,7 +14,6 @@ const { updateLastMessage } = require('../services/conversation.service');
 const { uploadToS3 } = require('../helpers/uploadToS3.helper');
 const { convertToBinary } = require('../helpers/converFile');
 const { checkValidImg } = require('../helpers/checkValidImg');
-
 const sendMessage = async (req, resp, next) => {
   try {
     const userId = req.user.userId;
@@ -23,7 +22,6 @@ const sendMessage = async (req, resp, next) => {
     const failedUploads = [];
     const successfulUploads = [];
     const invalidFiles = [];
-
     if (![messages?.length, sticker, files?.length].some(Boolean) || !conversationId) {
       return resp
         .status(StatusCodes.BAD_REQUEST)
@@ -59,6 +57,7 @@ const sendMessage = async (req, resp, next) => {
           //   console.error('Error occurred while converting file to Binary:', error);
           //   failedUploads.push(file.originalname);
           // }
+          next(error);
         }
       }
     }
@@ -88,17 +87,13 @@ const getMessage = async (req = request, resp = response, next) => {
     next(error);
   }
 };
-
 const getReplyMessages = async (req = request, resp = response, next) => {
   try {
     const { replyId } = req.params;
-
     const replyMessages = await getReplyMessagesService(replyId);
-
     resp.status(StatusCodes.OK).json(replyMessages);
   } catch (error) {
     console.error(error);
-
     next(error);
   }
 };
@@ -141,6 +136,15 @@ const pingMessage = async (req, resp, next) => {
     next(error);
   }
 };
+const reactForMessage = async (req, resp, next) => {
+  try {
+    const userId = req.user.userId;
+    const { status, react } = request.body;
+  } catch (error) {
+    console.error(error);
+    next(error);
+  }
+};
 module.exports = {
   sendMessage,
   getMessage,
@@ -148,4 +152,5 @@ module.exports = {
   deleteMessageForMe,
   deleteMessageForAll,
   pingMessage,
+  reactForMessage,
 };

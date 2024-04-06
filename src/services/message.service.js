@@ -1,6 +1,7 @@
 const createHttpError = require('http-errors');
 const { MessageModel } = require('../models/message.model');
 const { ConversationModel } = require('../models/conversation.model');
+const { CommandFailedEvent } = require('mongodb');
 
 const createMessage = async (messageData) => {
   let messageSaved = await MessageModel.create(messageData);
@@ -56,7 +57,7 @@ const getConversationMessage = async (conversationId, messageId) => {
     })
     .populate({
       path: 'conversation',
-      select: 'pinnedMessages -_id ',
+      select: 'pinnedMessages _id ',
       model: 'ConversationModel',
       populate: {
         path: 'pinnedMessages',
@@ -165,6 +166,14 @@ const setPinMesssageService = async (messageId) => {
   }
 };
 
+const reactForMessageService = async ({ userId, status, react }) => {
+  try {
+  } catch (error) {
+    console.error(error);
+    next(error);
+  }
+};
+
 module.exports = {
   createMessage,
   messagePopulate,
@@ -173,4 +182,5 @@ module.exports = {
   deleteMessageForMeService,
   deleteMessageAllService,
   setPinMesssageService,
+  reactForMessageService,
 };
