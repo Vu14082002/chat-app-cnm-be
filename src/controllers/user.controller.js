@@ -5,9 +5,10 @@ const {
   findUserByContactOrNameRegex,
   findUserById,
   updateAvatarURL,
-  sendFriendRequest,
+  sendFriendRequestService,
   deleteFriendById,
   updateUserInfoService,
+  acceptFriendRequestService,
 } = require('../services/user.service');
 const { StatusCodes } = require('http-status-codes');
 const uuid = require('uuid');
@@ -63,7 +64,20 @@ const addfriend = async (req, resp, next) => {
   try {
     const userId = req.user.userId;
     const { friendId } = req.body;
-    const result = await sendFriendRequest(userId, friendId);
+    const result = await sendFriendRequestService(userId, friendId);
+    if (!result) {
+      return resp.status(StatusCodes.BAD_REQUEST).json(result);
+    }
+    resp.status(StatusCodes.OK).json(result);
+  } catch (error) {
+    next(error);
+  }
+};
+const acceptFriendRequest = async (req, resp, next) => {
+  try {
+    const userId = req.user.userId;
+    const { friendId, notificationId } = req.body;
+    const result = await acceptFriendRequestService(userId, friendId, notificationId);
     if (!result) {
       return resp.status(StatusCodes.BAD_REQUEST).json(result);
     }
@@ -105,4 +119,5 @@ module.exports = {
   addfriend,
   deleteFriend,
   updateUserInfo,
+  acceptFriendRequest,
 };

@@ -1,6 +1,11 @@
+const mongoose = require('mongoose');
+const { ObjectId } = mongoose.Schema.Types;
 const httpErrors = require('http-errors');
 const { UserModel } = require('../models/user.model');
-const { sendNotification } = require('./notification.services');
+const { sendNotification, markNotificationAsRead } = require('./notification.services');
+const { FriendshipModel } = require('../models/friendship.model');
+const { FriendModel, FriendRequestModel } = require('../models/friendRequest.model');
+const NotificationModel = require('../models/notification.model');
 
 // find user by id
 const findUserByIdService = async (id) => {
@@ -49,64 +54,68 @@ const updateAvatarURL = async (userId, avatarUrl) => {
 };
 
 // TODO: Lêm thêm gừi notification
-const sendFriendRequest = async (senderId, receiverId) => {
-  const existingRequest = await FriendModel.findOne({
-    sender_id: senderId,
-    receiver_id: receiverId,
-    status: 'pending',
-  });
-  const reverseRequest = await FriendModel.findOne({
-    sender_id: receiverId,
-    receiver_id: senderId,
-    status: 'pending',
-  });
-  if (existingRequest) {
-    if (reverseRequest) {
-      await FriendModel.updateMany(
-        {
-          $or: [
-            { sender_id: senderId, receiver_id: receiverId },
-            { sender_id: receiverId, receiver_id: senderId },
-          ],
-          status: 'pending',
-        },
-        { status: 'accepted' }
-      );
-      sendNotification(receiverId, 'Bạn có môt yêu cầu kết bạn');
-      return true;
-    }
-    return false;
-  }
-
-  await FriendModel.create({ sender_id: senderId, receiver_id: receiverId });
-  sendNotification(receiverId, 'Bạn có môt yêu cầu kết bạn');
-
-  return true;
-};
-// TODO: chưa check
-const confirmFriendRequest = async (userId, friendId) => {
+const sendFriendRequestService = async (senderId, receiverId) => {
   try {
-    // Tìm yêu cầu kết bạn từ cả hai phía
-    const friendRequest = await FriendModel.findOne({
-      $or: [
-        { sender_id: userId, receiver_id: friendId },
-        { sender_id: friendId, receiver_id: userId },
-      ],
+    const existingFriendship = await FriendshipModel.exists({
+      _id: senderId,
+      friends: receiverId,
+    });
+    if (existingFriendship) {
+      return { status: false, message: 'Bạn bè đã có trong danh sách kết bạn rồi' };
+    }
+    const existingRequest = await FriendRequestModel.exists({
+      sender_id: senderId,
+      receiver_id: receiverId,
+      // status: 'pending',
+    });
+    if (existingRequest) {
+      return { status: false, message: 'Bạn đã gửi yêu cầu kết bạn rồi, hãy đợi phản hồi' };
+    }
+    await FriendRequestModel.create({
+      sender_id: senderId,
+      receiver_id: receiverId,
+    });
+    await sendNotification(receiverId, 'Bạn có một yêu cầu kết bạn');
+    return { status: true, message: `Đã gửi yêu cầu kết bạn đến ${receiverId}` };
+  } catch (error) {
+    throw httpErrors.InternalServerError(`Send notification from server error`, error);
+  }
+};
+
+// TODO: chưa check
+const acceptFriendRequestService = async (userId, senderId, notificationId) => {
+  try {
+    const existingRequest = await FriendRequestModel.findOneAndDelete({
+      sender_id: senderId,
+      receiver_id: userId,
     });
 
-    if (!friendRequest || friendRequest.status !== 'pending') {
-      return null;
+    if (!existingRequest) {
+      return { status: false, message: `Người dùng ${senderId} chưa gửi yêu cầu kết bạn tới bạn` };
     }
-
-    await FriendModel.findByIdAndUpdate(friendRequest._id, { status: 'accepted' });
-
-    return true;
+    //  add A to B
+    await FriendshipModel.findOneAndUpdate(
+      { _id: userId },
+      { $addToSet: { friends: senderId } },
+      { upsert: true }
+    );
+    // Add B to A
+    await FriendshipModel.findOneAndUpdate(
+      { _id: senderId },
+      { $addToSet: { friends: userId } },
+      { upsert: true }
+    );
+    Promise.all([
+      sendNotification(senderId, `Bạn và ${userId} đã trở thành bạn bè`),
+      markNotificationAsRead(notificationId),
+    ]);
+    return { status: true, message: `Bạn và ${senderId} đã trở thành bạn bè` };
   } catch (error) {
-    // Xử lý lỗi nếu có
-    console.error('Error confirming friend request:', error);
-    throw new Error('Failed to confirm friend request. Please try again later.');
+    throw httpErrors.InternalServerError(`Confirm friend request error`, error);
   }
 };
+
+const rejectFriendRequestService = async (userId, friendId) => {};
 
 const deleteFriendById = async (userId, friendId) => {
   try {
@@ -154,9 +163,10 @@ module.exports = {
   findUserByContactOrNameRegex,
   findUserById,
   updateAvatarURL,
-  sendFriendRequest,
+  sendFriendRequestService,
   deleteFriendById,
   getFriendListSortedByName,
   updateUserInfoService,
-  confirmFriendRequest,
+  acceptFriendRequestService,
+  rejectFriendRequestService,
 };

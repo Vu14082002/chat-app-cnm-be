@@ -4,10 +4,8 @@ const httpErrors = require('http-errors');
 const sendNotification = async (userId, content) => {
   try {
     await NotificationModel.create({ userId, content });
-    // TODO: socket gửi thong bao
   } catch (error) {
-    console.error('Error sending notification:', error);
-    throw httpErrors.InternalServerError(`Send notification from server error`);
+    throw httpErrors.InternalServerError(`Send notification from server error`, error);
   }
 };
 const markNotificationAsRead = async (notificationId) => {

@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const QRCode = require('qrcode');
 const { ObjectId } = mongoose.Schema.Types;
 
-const ConversationScheme = mongoose.Schema(
+const ConversationSchema = mongoose.Schema(
   {
     name: {
       type: String,
@@ -85,7 +85,7 @@ const ConversationScheme = mongoose.Schema(
   }
 );
 
-ConversationScheme.pre('save', async function (next) {
+ConversationSchema.pre('save', async function (next) {
   if (!this.qrCode) {
     try {
       const qrData = await QRCode.toDataURL(this._id.toString());
@@ -97,6 +97,6 @@ ConversationScheme.pre('save', async function (next) {
   next();
 });
 
-const ConversationModel = mongoose.model('ConversationModel', ConversationScheme);
-
+const ConversationModel =
+  mongoose.model.ConversationModel || mongoose.model('ConversationModel', ConversationSchema);
 module.exports = { ConversationModel };
