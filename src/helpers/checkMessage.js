@@ -13,15 +13,14 @@ const checkMessageHelper = async (message) => {
         {
           role: 'system',
           content:
-            'Chỉ trả lời true hoặc false, chỉ trả lời là false nếu các tin nhắn, hoặc promt có chứ nội dung lành mạnh, hoặc có từ ngữ chừi thế, xúc phạm, còn các trương hợp còn lại thì trả lời là true, chấp nhận các tin nhắn có chứ icon các từ viết sai chính tả, hoặc các từ hay dùng phổ biến cộng đồng cững trả lời là true',
+            'Chỉ trả lời true hoặc false, chỉ trả lời là false nếu các tin nhắn ở mức độ VERY_LIKELY, hoặc promt có chứ nội dung không lành mạnh ở mức độ VERY_LIKELY, hoặc có từ ngữ chừi thề ở mức độ VERY_LIKELY, xúc phạm ở mức độ VERY_LIKELY, tất cả các trường hợp còn lại đều là true',
         },
         { role: 'user', content: message },
       ],
       max_tokens: 100,
     });
     const responeContent = respone.choices[0].message.content;
-    console.log('Open Ai content ---> ', responeContent);
-    if (responeContent.trim().toLocaleLowerCase('false')) {
+    if (responeContent.trim().toLocaleLowerCase() == 'false') {
       return false;
     }
     return true;

@@ -75,7 +75,13 @@ const sendMessage = async (req, resp, next) => {
 
     const messageContent = invalidMessageContent.join(' ');
     const checkValidMessage = await checkMessageHelper(messageContent);
-
+    if (!checkValidMessage) {
+      if (!sticker && !files.length && !location) {
+        return resp
+          .status(StatusCodes.OK)
+          .json({ message: [], invalidFiles, failedUploads: [], invalidMessage: true });
+      }
+    }
     const messageData = {
       sender: userId,
       messages: checkValidMessage ? messages : [],
@@ -85,13 +91,6 @@ const sendMessage = async (req, resp, next) => {
       sticker,
       location,
     };
-
-    if (![checkValidMessage, sticker, files.length, location].some(Boolean)) {
-      return resp
-        .status(StatusCodes.OK)
-        .json({ message: [], invalidFiles, failedUploads: [], invalidMessage: true });
-    }
-
     const messageSaved = await createMessage(messageData);
     await updateLastMessage(conversationId, messageSaved);
     return resp.status(StatusCodes.OK).json({
