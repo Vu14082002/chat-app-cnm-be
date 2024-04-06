@@ -47,7 +47,7 @@ const messageSchema = mongoose.Schema(
         },
       },
     ],
-    localtion: {
+    location: {
       type: Object,
       default: null,
     },

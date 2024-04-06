@@ -14,21 +14,23 @@ const { updateLastMessage } = require('../services/conversation.service');
 const { uploadToS3 } = require('../helpers/uploadToS3.helper');
 const { convertToBinary } = require('../helpers/converFile');
 const { checkValidImg } = require('../helpers/checkValidImg');
+const { checkMessageHelper } = require('../helpers/checkMessage');
 const sendMessage = async (req, resp, next) => {
   try {
     const userId = req.user.userId;
-    const { messages, conversationId, reply, sticker, localtion } = req.body;
-    const files = req.files;
-    const failedUploads = [];
-    const successfulUploads = [];
+    const { messages, conversationId, reply, sticker, location } = req.body;
+    const files = req.files || [];
     const invalidFiles = [];
-    let invalidMessag = false;
-    if (![messages?.length, sticker, files?.length, localtion].some(Boolean) || !conversationId) {
+    const successfulUploads = [];
+    const invalidMessageContent = [];
+
+    if (!conversationId || ![messages?.length, sticker, files.length, location].some(Boolean)) {
       return resp
         .status(StatusCodes.BAD_REQUEST)
         .json('Please provide a conversationId and message or file');
     }
-    if (files && req.files.length > 0) {
+
+    if (files.length > 0) {
       for (const file of files) {
         try {
           const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp'];
@@ -62,24 +64,47 @@ const sendMessage = async (req, resp, next) => {
         }
       }
     }
+
+    if (messages?.length > 0) {
+      for (const message of messages) {
+        if (message.type === 'text') {
+          invalidMessageContent.push(message.content);
+        }
+      }
+    }
+
+    const messageContent = invalidMessageContent.join(' ');
+    const checkValidMessage = await checkMessageHelper(messageContent);
+
     const messageData = {
       sender: userId,
-      messages: messages || [],
+      messages: checkValidMessage ? messages : [],
       conversation: conversationId,
-      files: successfulUploads || [],
+      files: successfulUploads,
       reply,
       sticker,
-      localtion,
+      location,
     };
+
+    if (![checkValidMessage, sticker, files.length, location].some(Boolean)) {
+      return resp
+        .status(StatusCodes.OK)
+        .json({ message: [], invalidFiles, failedUploads: [], invalidMessage: true });
+    }
+
     const messageSaved = await createMessage(messageData);
-    const message = await messagePopulate(messageSaved._id);
     await updateLastMessage(conversationId, messageSaved);
-    // TODO: check tin nhan trc khi gui
-    resp.status(StatusCodes.OK).json({ message, invalidFiles, failedUploads, invalidMessag });
+    return resp.status(StatusCodes.OK).json({
+      message: await messagePopulate(messageSaved._id),
+      invalidFiles,
+      failedUploads: [],
+      invalidMessage: !checkValidMessage,
+    });
   } catch (error) {
     next(error);
   }
 };
+
 const getMessage = async (req = request, resp = response, next) => {
   try {
     const messageId = req.query.messageId;
@@ -100,10 +125,6 @@ const getReplyMessages = async (req = request, resp = response, next) => {
     next(error);
   }
 };
-// const replyMessages = async (req, resp, next) => {
-//   const messageId = req.query.messageId;
-//   sendMessage;
-// };
 const deleteMessageForMe = async (req, resp, next) => {
   try {
     const messageId = req.body.messageId;
