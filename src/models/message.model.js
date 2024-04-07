@@ -63,7 +63,7 @@ const messageSchema = mongoose.Schema(
       type: [
         {
           user: {
-            type: ObjectId,
+            type: String,
           },
           status: {
             type: String,
@@ -77,6 +77,7 @@ const messageSchema = mongoose.Schema(
       ],
       default: [],
     },
+
     deleted: {
       type: String,
       enum: ['0', '1', '2'],

@@ -9,6 +9,7 @@ const {
   deleteMessageForMeService,
   deleteMessageAllService,
   setPinMesssageService,
+  reactForMessageService,
 } = require('../services/message.service');
 const { updateLastMessage } = require('../services/conversation.service');
 const { uploadToS3 } = require('../helpers/uploadToS3.helper');
@@ -65,26 +66,27 @@ const sendMessage = async (req, resp, next) => {
       }
     }
 
+    let checkValidMessage = true;
     if (messages?.length > 0) {
       for (const message of messages) {
         if (message.type === 'text') {
           invalidMessageContent.push(message.content);
         }
       }
-    }
-
-    const messageContent = invalidMessageContent.join(' ');
-    const checkValidMessage = await checkMessageHelper(messageContent);
-    if (!checkValidMessage) {
-      if (!sticker && !files.length && !location) {
-        return resp
-          .status(StatusCodes.OK)
-          .json({ message: [], invalidFiles, failedUploads: [], invalidMessage: true });
+      const messageContent = invalidMessageContent.join(' ');
+      checkValidMessage = await checkMessageHelper(messageContent);
+      if (!checkValidMessage) {
+        if (!sticker && !files.length && !location) {
+          return resp
+            .status(StatusCodes.OK)
+            .json({ message: [], invalidFiles, failedUploads: [], invalidMessage: true });
+        }
       }
     }
+
     const messageData = {
       sender: userId,
-      messages: checkValidMessage ? messages : [],
+      messages: checkValidMessage && messages?.length > 0 ? messages : [],
       conversation: conversationId,
       files: successfulUploads,
       reply,
@@ -162,9 +164,10 @@ const pingMessage = async (req, resp, next) => {
 const reactForMessage = async (req, resp, next) => {
   try {
     const userId = req.user.userId;
-    const { status, react } = request.body;
+    const { react, messageId } = req.body;
+    await reactForMessageService(react, userId, messageId);
+    return resp.status(StatusCodes.OK).json(await messagePopulate(messageId));
   } catch (error) {
-    console.error(error);
     next(error);
   }
 };

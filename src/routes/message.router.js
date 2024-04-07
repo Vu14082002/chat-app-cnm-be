@@ -23,6 +23,7 @@ messageRouter.route('/deleteForMe').post(trimRequest.all, checkAuthorized, delet
 messageRouter.route('/deleteForAll').post(trimRequest.all, checkAuthorized, deleteMessageForAll);
 messageRouter.route('/pin/:messageId').post(trimRequest.all, checkAuthorized, pingMessage);
 // TODO: DELETE pin
-messageRouter.route('/react').post(trimRequest.all, checkAuthorized, reactForMessage);
+// add react
+messageRouter.route('/addreact').post(trimRequest.all, checkAuthorized, reactForMessage);
 
 module.exports = { messageRouter };

@@ -84,7 +84,7 @@ const ConversationSchema = mongoose.Schema(
     timestamps: true,
   }
 );
-
+ConversationSchema.index({ pinBy: 1 });
 ConversationSchema.pre('save', async function (next) {
   if (!this.qrCode) {
     try {

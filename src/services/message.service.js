@@ -6,7 +6,7 @@ const { CommandFailedEvent } = require('mongodb');
 const createMessage = async (messageData) => {
   let messageSaved = await MessageModel.create(messageData);
   if (!messageSaved) {
-    throw createHttpError.BadRequest('Something wrong, pls Try again later');
+    throw createHttpError.InternalServerError('Something wrong, pls Try again later');
   }
   return messageSaved;
 };
@@ -167,11 +167,29 @@ const setPinMesssageService = async (messageId) => {
   }
 };
 
-const reactForMessageService = async ({ userId, status, react }) => {
+const reactForMessageService = async (react, userReact, messageId) => {
   try {
+    const existingMessage = await MessageModel.findById(messageId);
+    if (!existingMessage) {
+      throw createHttpError.NotFound('Message not found');
+    }
+    const existingStatusIndex = existingMessage.statuses.findIndex(
+      (status) => status.user === userReact
+    );
+    if (existingStatusIndex === -1) {
+      existingMessage.statuses.push({
+        user: userReact,
+        react: react,
+      });
+    } else {
+      existingMessage.statuses[existingStatusIndex].react = react;
+    }
+    const updatedMessage = await existingMessage.save();
+    return updatedMessage;
   } catch (error) {
-    console.error(error);
-    next(error);
+    throw createHttpError.InternalServerError(
+      `reactForMessageService encountered an error ${error}`
+    );
   }
 };
 

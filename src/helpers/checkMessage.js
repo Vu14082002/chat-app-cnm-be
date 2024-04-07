@@ -13,7 +13,7 @@ const checkMessageHelper = async (message) => {
         {
           role: 'system',
           content:
-            'Chỉ trả lời true hoặc false, chỉ trả lời là false nếu các tin nhắn ở mức độ cực kỳ cực kỳ giống, hoặc prompt có chứ nội dung không lành mạnh ở mức độ cực kỳ cực kỳ giống, hoặc có từ ngữ chừi thề ở mức độ cực kỳ cực kỳ giống, xúc phạm ở mức độ cực kỳ cực kỳ giống, tất cả các trường hợp còn lại đều là true',
+            'Chỉ trả lời true hoặc false, chỉ trả lời là false nếu các tin nhắn ở mức độ cực kỳ cực kỳ giống, hoặc prompt có chứ nội dung không lành mạnh ở mức độ cực kỳ cực kỳ giống, hoặc có từ ngữ chừi thề ở mức độ cực kỳ cực kỳ giống, xúc phạm ở mức độ cực kỳ cực kỳ giống, tất cả các trường hợp còn lại đều là true,các tử không có ý nghĩa hoặc lỗi chính tả đều là true',
         },
         { role: 'user', content: message },
       ],
