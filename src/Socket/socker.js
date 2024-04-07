@@ -136,5 +136,29 @@ const socketServer = (socket, io) => {
       socket.in(element._id).emit('recallMessage', message);
     });
   });
+
+  // Pin message
+  socket.on('pinMessage', ({ message, userId }) => {
+    const conversationId = message?.conversation?._id;
+    if (!conversationId) return;
+
+    message.conversation.users.forEach((element) => {
+      if (element._id === userId) return;
+
+      socket.in(element._id).emit('pinMessage', { message, userId });
+    });
+  });
+
+  // Unpin message
+  socket.on('unpinMessage', ({ message, userId }) => {
+    const conversationId = message?.conversation?._id;
+    if (!conversationId) return;
+
+    message.conversation.users.forEach((element) => {
+      if (element._id === userId) return;
+
+      socket.in(element._id).emit('unpinMessage', { message, userId });
+    });
+  });
 };
 module.exports = { socketServer };
