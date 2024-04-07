@@ -165,12 +165,18 @@ const reactForMessage = async (req, resp, next) => {
   try {
     const userId = req.user.userId;
     const { react, messageId } = req.body;
-    await reactForMessageService(react, userId, messageId);
+    if (react) {
+      await reactForMessageService(react, userId, messageId);
+    } else {
+      await reactForMessageService(null, userId, messageId);
+    }
+
     return resp.status(StatusCodes.OK).json(await messagePopulate(messageId));
   } catch (error) {
     next(error);
   }
 };
+
 module.exports = {
   sendMessage,
   getMessage,

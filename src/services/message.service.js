@@ -171,18 +171,26 @@ const reactForMessageService = async (react, userReact, messageId) => {
   try {
     const existingMessage = await MessageModel.findById(messageId);
     if (!existingMessage) {
-      throw createHttpError.NotFound('Message not found');
+      throw createHttpError.BadRequest('Message not found');
     }
+
     const existingStatusIndex = existingMessage.statuses.findIndex(
       (status) => status.user === userReact
     );
-    if (existingStatusIndex === -1) {
-      existingMessage.statuses.push({
-        user: userReact,
-        react: react,
-      });
+
+    if (react !== undefined && react !== null) {
+      if (existingStatusIndex === -1) {
+        existingMessage.statuses.push({
+          user: userReact,
+          react: react,
+        });
+      } else {
+        existingMessage.statuses[existingStatusIndex].react = react;
+      }
     } else {
-      existingMessage.statuses[existingStatusIndex].react = react;
+      if (existingStatusIndex !== -1) {
+        existingMessage.statuses.splice(existingStatusIndex, 1);
+      }
     }
     const updatedMessage = await existingMessage.save();
     return updatedMessage;
