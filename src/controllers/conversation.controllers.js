@@ -8,6 +8,7 @@ const {
   populateConversation,
   getListUserConversations,
   pinConversationService,
+  unPinConversationService,
 } = require('../services/conversation.service');
 const { findUserByIdService } = require('../services/user.service');
 
@@ -73,4 +74,4 @@ const pinConversation = async (req, resp, next) => {
 //         throw createHttpError.BadRequest('Some thing wrong, Try agian');
 //     }
 // };
-module.exports = { openConversation, getConversations, pinConversation };
+module.exports = { openConversation, getConversations, pinConversation, unPinConversation };

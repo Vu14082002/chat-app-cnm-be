@@ -9,6 +9,7 @@ const {
 
 conversationRouter.route('/').post(trimRequest.all, checkAuthorized, openConversation);
 conversationRouter.route('/').get(trimRequest.all, checkAuthorized, getConversations);
-conversationRouter.route('/:conversationId').get(trimRequest.all, checkAuthorized, pinConversation);
-
+conversationRouter
+  .route('/pin/:conversationId')
+  .get(trimRequest.all, checkAuthorized, pinConversation);
 module.exports = { conversationRouter };
