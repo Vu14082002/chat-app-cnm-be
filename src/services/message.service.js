@@ -125,10 +125,11 @@ const deleteMessageForMeService = async (userId, messageId) => {
   try {
     const updatedMessage = await MessageModel.findOneAndUpdate(
       { _id: messageId, 'usersDeleted.user': { $ne: userId } },
-      { $push: { userDelete: { user: userId, deleted: '1' } } },
+      { $addToSet: { usersDeleted: { user: userId, deleted: '1' } } },
       { new: true }
     );
-
+    console.log('Vao day nha');
+    console.log(updatedMessage);
     if (!updatedMessage) {
       throw createHttpError.NotFound(`Message: ${messageId} not found`);
     }

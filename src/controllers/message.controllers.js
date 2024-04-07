@@ -145,7 +145,7 @@ const deleteMessageForMe = async (req, resp, next) => {
     const messageId = req.body.messageId;
     const senderId = req.user.userId;
     await deleteMessageForMeService(senderId, messageId);
-    resp.status(StatusCodes.OK).json({ message: 'delete success' });
+    return resp.status(StatusCodes.OK).json({ message: 'delete success' });
   } catch (error) {
     next(error);
   }
