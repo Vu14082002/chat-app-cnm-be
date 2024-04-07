@@ -6,6 +6,7 @@ const { sendNotification, markNotificationAsRead } = require('./notification.ser
 const { FriendshipModel } = require('../models/friendship.model');
 const { FriendModel, FriendRequestModel } = require('../models/friendRequest.model');
 const NotificationModel = require('../models/notification.model');
+const { CommandFailedEvent } = require('mongodb');
 
 // find user by id
 const findUserByIdService = async (id) => {
@@ -81,6 +82,19 @@ const sendFriendRequestService = async (senderId, receiverId) => {
     throw httpErrors.InternalServerError(`Send notification from server error`, error);
   }
 };
+const listRequestFriendService = async (userId) => {
+  try {
+    const listRequestFriend = await FriendRequestModel.find({ sender_id: userId }).populate({
+      path: 'receiver_id',
+      select: 'name avatar',
+      model: 'UserModel',
+    });
+    return listRequestFriend;
+  } catch (error) {
+    console.error(error);
+    next(error);
+  }
+};
 
 // TODO: chưa check
 const acceptFriendRequestService = async (userId, senderId, notificationId) => {
@@ -112,6 +126,25 @@ const acceptFriendRequestService = async (userId, senderId, notificationId) => {
     return { status: true, message: `Bạn và ${senderId} đã trở thành bạn bè` };
   } catch (error) {
     throw httpErrors.InternalServerError(`Confirm friend request error`, error);
+  }
+};
+const revocationRequestFriendService = async (userId, friendId) => {
+  try {
+    const result = await FriendRequestModel.findOneAndDelete({
+      sender_id: userId,
+      receiver_id: friendId,
+    });
+
+    if (!result) {
+      throw httpErrors.NotFound(`Friend request not found for user: ${friendId}`);
+    }
+
+    return true;
+  } catch (error) {
+    if (error instanceof httpErrors.NotFound) {
+      throw error;
+    }
+    throw httpErrors.InternalServerError(`revocationRequestFriendService request error`, error);
   }
 };
 
@@ -169,4 +202,6 @@ module.exports = {
   updateUserInfoService,
   acceptFriendRequestService,
   rejectFriendRequestService,
+  listRequestFriendService,
+  revocationRequestFriendService,
 };
