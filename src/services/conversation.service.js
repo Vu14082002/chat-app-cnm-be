@@ -86,8 +86,7 @@ const getListUserConversations = async (userId) => {
       select: 'name avatar status',
     });
   } catch (error) {
-    console.error(error);
-    throw httpErrors.InternalServerError(`getListUserConversations from server error`, error);
+    throw httpErrors.InternalServerError(`getListUserConversations from server error${error}`);
   }
   return conversations;
 };
@@ -108,18 +107,22 @@ const updateLastMessage = async (conversationId, message) => {
 
 const pinConversationService = async ({ conversationId, userId }) => {
   try {
-    const updatedConversation = await ConversationModel.findOneAndUpdate(
-      { _id: conversationId, users: { $in: [userId] }, pinBy: { $nin: [userId] } },
-      { $addToSet: { pinBy: userId } },
-      { new: true }
-    );
-    if (!updatedConversation) {
-      throw createHttpError.BadRequest('Invalid conversation or user is already pinned');
+    const conversation = await ConversationModel.findById(conversationId);
+    if (!conversation) {
+      throw createHttpError.NotFound('Invalid conversation');
+    }
+    const pinIndex = conversation.pinBy.indexOf(userId);
+    if (pinIndex === -1) {
+      await ConversationModel.findByIdAndUpdate(conversationId, { $addToSet: { pinBy: userId } });
+    } else {
+      await ConversationModel.findByIdAndUpdate(conversationId, { $pull: { pinBy: userId } });
     }
     return true;
   } catch (error) {
-    console.error(error);
-    throw createHttpError.InternalServerError('Failed to pin conversation', error);
+    if (error instanceof createHttpError.NotFound) {
+      throw error;
+    }
+    throw createHttpError.InternalServerError('Failed to unpin conversation', error);
   }
 };
 
