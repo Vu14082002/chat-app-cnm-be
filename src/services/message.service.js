@@ -1,3 +1,5 @@
+const mongoose = require('mongoose');
+const ObjectId = mongoose.Types.ObjectId;
 const createHttpError = require('http-errors');
 const { MessageModel } = require('../models/message.model');
 const { ConversationModel } = require('../models/conversation.model');
@@ -147,7 +149,6 @@ const deleteMessageAllService = async (sender, messageId) => {
 };
 
 const setPinMesssageService = async (messageId) => {
-  // TODO: kiem tra tin nhan da dc pin chua
   try {
     const message = await MessageModel.findById(messageId);
     if (!message) {
@@ -172,7 +173,27 @@ const setPinMesssageService = async (messageId) => {
   }
 };
 
-const reactForMessageService = async (react, userReact, messageId) => {
+const unPinMessageService = async (messageId) => {
+  try {
+    const message = await MessageModel.findById(messageId);
+    const conversation = await ConversationModel.findOneAndUpdate(
+      { _id: message.conversation },
+      { $pull: { pinnedMessages: ObjectId(messageId) } },
+      { new: true }
+    );
+    if (!conversation) {
+      throw createHttpError.NotFound('Message', messageId, ' have not pin');
+    }
+    return true;
+  } catch (error) {
+    if (error instanceof createHttpError.NotFound) {
+      throw error;
+    }
+    throw createHttpError.InternalServerError('Pin message something wrong', error);
+  }
+};
+
+const reactForMessageService = async (messageId) => {
   try {
     const existingMessage = await MessageModel.findById(messageId);
     if (!existingMessage) {
@@ -214,5 +235,6 @@ module.exports = {
   deleteMessageForMeService,
   deleteMessageAllService,
   setPinMesssageService,
+  unPinMessageService,
   reactForMessageService,
 };

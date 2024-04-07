@@ -43,11 +43,9 @@ const createOTP = async (req, resp, next) => {
           OTP: otp,
           title: '',
         };
-
         const subject = 'Verify Email FOR CHAT APP CNM';
         await sendEmail('verifyEmail', contact, subject, locals);
       } else {
-        // OTP phone later
         // TODO: Send OTP phone
       }
       return resp
@@ -123,12 +121,10 @@ const register = async (req, resp, next) => {
     next(error);
   }
 };
-// TODO: thêm cái chặm login, nếu login sai 3 lân liên tiếp
 const login = async (req, resp, next) => {
   try {
     const { contact, password } = req.body;
     const user = await loginUserService({ contact, password });
-    // TODO:Nếu tài khoản bị xóa
     // if (user.deleted) {
     //   resp.status(StatusCodes.BAD_REQUEST).json({
 
@@ -157,12 +153,6 @@ const loginAuthenticateWithEncryptedCredentials = async (req, resp, next) => {
   try {
     const { password, contact } = req.body;
     const user = await findUserByPhoneAndPasswordBcryptService(contact, password);
-    // TODO: Kiểm tra nếu tài khoản bị xóa
-    // if (user.deleted) {
-    //     resp.status(StatusCodes.OK).json({
-    //         message: 'Account have delete, You want to restore',
-    //     });
-    // }
     if (!user) {
       return resp.status(StatusCodes.NOT_FOUND).json({ message: 'NOT FOUND USER AND PASSWORD' });
     }

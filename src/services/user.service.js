@@ -54,7 +54,6 @@ const updateAvatarURL = async (userId, avatarUrl) => {
   }
 };
 
-// TODO: Lêm thêm gừi notification
 const sendFriendRequestService = async (senderId, receiverId) => {
   try {
     const existingFriendship = await FriendshipModel.exists({
@@ -82,6 +81,8 @@ const sendFriendRequestService = async (senderId, receiverId) => {
     throw httpErrors.InternalServerError(`Send notification from server error`, error);
   }
 };
+
+// Bạn là A: lấy danh sach các yêu cầu kết bạn mà bạn đã gửi
 const listRequestFriendService = async (userId) => {
   try {
     const listRequestFriend = await FriendRequestModel.find({ sender_id: userId }).populate({
@@ -95,8 +96,21 @@ const listRequestFriendService = async (userId) => {
     next(error);
   }
 };
+// Bạn là A: lấy danh sach các yêu cầu kết bạn mà bạn đã được nhận
+const listRequestfriendWaitResponeService = async (userId) => {
+  try {
+    const listRequestFriend = await FriendRequestModel.find({ receiver_id: userId }).populate({
+      path: 'receiver_id',
+      select: 'name avatar',
+      model: 'UserModel',
+    });
+    return listRequestFriend;
+  } catch (error) {
+    console.error(error);
+    next(error);
+  }
+};
 
-// TODO: chưa check
 const acceptFriendRequestService = async (userId, senderId, notificationId) => {
   try {
     const existingRequest = await FriendRequestModel.findOneAndDelete({
@@ -217,4 +231,5 @@ module.exports = {
   listRequestFriendService,
   revocationRequestFriendService,
   getListFriendService,
+  listRequestfriendWaitResponeService,
 };

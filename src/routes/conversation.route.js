@@ -7,7 +7,6 @@ const {
   pinConversation,
 } = require('../controllers/conversation.controllers');
 
-// [ ] QR Code
 conversationRouter.route('/').post(trimRequest.all, checkAuthorized, openConversation);
 conversationRouter.route('/').get(trimRequest.all, checkAuthorized, getConversations);
 conversationRouter.route('/:conversationId').get(trimRequest.all, checkAuthorized, pinConversation);

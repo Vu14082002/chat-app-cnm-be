@@ -12,6 +12,7 @@ const {
   listRequestFriendService,
   revocationRequestFriendService,
   getListFriendService,
+  listRequestfriendWaitResponeService,
 } = require('../services/user.service');
 const { StatusCodes } = require('http-status-codes');
 const uuid = require('uuid');
@@ -85,6 +86,15 @@ const listRequestfriend = async (req, resp, next) => {
     next(error);
   }
 };
+const listRequestfriendWaitRespone = async (req, resp, next) => {
+  try {
+    const userId = req.user.userId;
+    const listRequestFriend = (await listRequestfriendWaitResponeService(userId)) || [];
+    return resp.status(StatusCodes.OK).json(listRequestFriend);
+  } catch (error) {
+    next(error);
+  }
+};
 const revocationRequestFriend = async (req, resp, next) => {
   try {
     const userId = req.user.userId;
@@ -153,6 +163,7 @@ module.exports = {
   updateUserInfo,
   acceptFriendRequest,
   listRequestfriend,
+  listRequestfriendWaitRespone,
   revocationRequestFriend,
   getListFriend,
 };

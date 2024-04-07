@@ -10,6 +10,7 @@ const {
   deleteMessageAllService,
   setPinMesssageService,
   reactForMessageService,
+  unPinMessageService,
 } = require('../services/message.service');
 const { updateLastMessage } = require('../services/conversation.service');
 const { uploadToS3 } = require('../helpers/uploadToS3.helper');
@@ -148,7 +149,7 @@ const deleteMessageForAll = async (req, resp, next) => {
     next(error);
   }
 };
-const pingMessage = async (req, resp, next) => {
+const pinMessage = async (req, resp, next) => {
   try {
     const messageId = req.params.messageId;
     const pin = await setPinMesssageService(messageId);
@@ -158,6 +159,15 @@ const pingMessage = async (req, resp, next) => {
     return resp.status(StatusCodes.NOT_FOUND).json({ message: `message  ${messageId} not found` });
   } catch (error) {
     console.error(error);
+    next(error);
+  }
+};
+const unPinMessage = async (req, resp, next) => {
+  try {
+    const messageId = req.params.messageId;
+    await unPinMessageService(messageId);
+    return resp.status(StatusCodes.OK).json({ message: `unpin message ${messageId} success` });
+  } catch (error) {
     next(error);
   }
 };
@@ -183,6 +193,7 @@ module.exports = {
   getReplyMessages,
   deleteMessageForMe,
   deleteMessageForAll,
-  pingMessage,
+  pinMessage,
+  unPinMessage,
   reactForMessage,
 };

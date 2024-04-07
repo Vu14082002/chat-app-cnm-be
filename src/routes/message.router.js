@@ -8,8 +8,9 @@ const {
   getReplyMessages,
   deleteMessageForMe,
   deleteMessageForAll,
-  pingMessage,
+  pinMessage,
   reactForMessage,
+  unPinMessage,
 } = require('../controllers/message.controllers');
 // userRouter.route('/updateAvatar').post(checkAuthorized, upload.single('avatar'), updateAvatar);
 const { upload } = require('../configs/multer.config');
@@ -21,7 +22,8 @@ messageRouter
   .get(trimRequest.all, checkAuthorized, getMessage);
 messageRouter.route('/deleteForMe').post(trimRequest.all, checkAuthorized, deleteMessageForMe);
 messageRouter.route('/deleteForAll').post(trimRequest.all, checkAuthorized, deleteMessageForAll);
-messageRouter.route('/pin/:messageId').post(trimRequest.all, checkAuthorized, pingMessage);
+messageRouter.route('/pin/:messageId').post(trimRequest.all, checkAuthorized, pinMessage);
+messageRouter.route('/unpinMessage/:messageId').get(trimRequest.all, checkAuthorized, unPinMessage);
 // TODO: DELETE pin
 // add react
 messageRouter.route('/react').post(trimRequest.all, checkAuthorized, reactForMessage);
