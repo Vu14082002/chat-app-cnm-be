@@ -80,11 +80,25 @@ const messageSchema = mongoose.Schema(
       ],
       default: [],
     },
-
     deleted: {
       type: String,
       enum: ['0', '1', '2'],
       default: '0',
+    },
+    usersDeleted: {
+      type: [
+        {
+          user: {
+            type: String,
+            ref: 'UserModel',
+          },
+          deleted: {
+            type: String,
+            enum: ['1', '2'],
+            default: '1',
+          },
+        },
+      ],
     },
   },
   {

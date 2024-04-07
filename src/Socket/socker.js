@@ -19,7 +19,6 @@ const socketServer = (socket, io) => {
   socket.on('disconnect', () => {
     // Lọc ra người dùng đã ngắt kết nối và cập nhật lại danh sách
     userOnline = userOnline.filter((u) => u.socketId !== socket.id);
-    console.log(userOnline);
     io.emit('usersOnline', userOnline);
   });
   // tạo room socket và join vào

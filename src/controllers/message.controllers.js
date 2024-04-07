@@ -110,13 +110,15 @@ const sendMessage = async (req, resp, next) => {
 const getMessage = async (req = request, resp = response, next) => {
   try {
     const messageId = req.query.messageId;
+    const userId = req.user.userId;
     const conversationId = req.params.conversationId;
-    const message = await getConversationMessage(conversationId, messageId);
+    const message = await getConversationMessage(conversationId, messageId, userId);
     resp.status(StatusCodes.OK).json(message);
   } catch (error) {
     next(error);
   }
 };
+
 const getReplyMessages = async (req = request, resp = response, next) => {
   try {
     const { replyId } = req.params;
@@ -127,6 +129,17 @@ const getReplyMessages = async (req = request, resp = response, next) => {
     next(error);
   }
 };
+// TODO: Tự hiểu
+// const deleteMessageForMe = async (req, resp, next) => {
+//   try {
+//     const messageId = req.body.messageId;
+//     const senderId = req.user.userId;
+//     await deleteMessageForMeService(senderId, messageId);
+//     resp.status(StatusCodes.OK).json({ message: 'delete success' });
+//   } catch (error) {
+//     next(error);
+//   }
+// };
 const deleteMessageForMe = async (req, resp, next) => {
   try {
     const messageId = req.body.messageId;
@@ -134,7 +147,6 @@ const deleteMessageForMe = async (req, resp, next) => {
     await deleteMessageForMeService(senderId, messageId);
     resp.status(StatusCodes.OK).json({ message: 'delete success' });
   } catch (error) {
-    console.error(error);
     next(error);
   }
 };

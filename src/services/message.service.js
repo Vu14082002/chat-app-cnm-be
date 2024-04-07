@@ -42,10 +42,11 @@ const messagePopulate = async (id) => {
   return message;
 };
 
-const getConversationMessage = async (conversationId, messageId) => {
+const getConversationMessage = async (conversationId, messageId, userId) => {
   const filter = [{ conversation: conversationId }];
 
   if (messageId) filter.push({ _id: { $lt: messageId } });
+  filter.push({ 'usersDeleted.user': { $nin: [userId] } });
 
   const message = await MessageModel.find({
     $and: filter,
@@ -98,24 +99,43 @@ const getReplyMessages = async (replyId) => {
 
   return messages;
 };
-
-const deleteMessageForMeService = async (sender, messageId) => {
-  let notFound;
+// :) tự hiểu
+// const deleteMessageForMeService = async (sender, messageId) => {
+//   let notFound;
+//   try {
+//     const messageDelete = await MessageModel.findOneAndUpdate(
+//       { sender, _id: messageId, deleted: '0' },
+//       { $set: { deleted: '1' } }
+//     );
+//     if (!messageDelete) {
+//       notFound = createHttpError.BadRequest(
+//         'senderId or messageId not found or message have been deleted'
+//       );
+//       throw notFound;
+//     }
+//     return true;
+//   } catch (error) {
+//     if (notFound) {
+//       throw notFound;
+//     }
+//     throw createHttpError.InternalServerError('Delete message something wrong', error);
+//   }
+// };
+const deleteMessageForMeService = async (userId, messageId) => {
   try {
-    const messageDelete = await MessageModel.findOneAndUpdate(
-      { sender, _id: messageId, deleted: '0' },
-      { $set: { deleted: '1' } }
+    const updatedMessage = await MessageModel.findOneAndUpdate(
+      { _id: messageId, 'usersDeleted.user': { $ne: userId } },
+      { $push: { userDelete: { user: userId, deleted: '1' } } },
+      { new: true }
     );
-    if (!messageDelete) {
-      notFound = createHttpError.BadRequest(
-        'senderId or messageId not found or message have been deleted'
-      );
-      throw notFound;
+
+    if (!updatedMessage) {
+      throw createHttpError.NotFound(`Message: ${messageId} not found`);
     }
     return true;
   } catch (error) {
-    if (notFound) {
-      throw notFound;
+    if (error instanceof createHttpError.NotFound) {
+      throw error;
     }
     throw createHttpError.InternalServerError('Delete message something wrong', error);
   }
