@@ -1,16 +1,16 @@
 const NotificationModel = require('../models/notification.model');
 const httpErrors = require('http-errors');
 
-const sendNotification = async (userId, content) => {
+const sendNotification = async (userId, userSendRequest, content) => {
   try {
-    await NotificationModel.create({ userId, content });
+    await NotificationModel.create({ userId, userSendRequest, content });
   } catch (error) {
     throw httpErrors.InternalServerError(`Send notification from server error`, error);
   }
 };
-const markNotificationAsRead = async (notificationId) => {
+const markNotificationAsRead = async (userId, userSendRequest) => {
   try {
-    await NotificationModel.findByIdAndUpdate(notificationId, { read: true });
+    await NotificationModel.findOneAndUpdate({ userId, userSendRequest }, { read: true });
     return true;
   } catch (error) {
     console.error('Error marking notification as read:', error);

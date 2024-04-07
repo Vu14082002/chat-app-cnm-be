@@ -75,10 +75,10 @@ const sendFriendRequestService = async (senderId, receiverId) => {
       sender_id: senderId,
       receiver_id: receiverId,
     });
-    await sendNotification(receiverId, 'Bạn có một yêu cầu kết bạn');
+    await sendNotification(receiverId, senderId, 'Bạn có một yêu cầu kết bạn');
     return { status: true, message: `Đã gửi yêu cầu kết bạn đến ${receiverId}` };
   } catch (error) {
-    throw httpErrors.InternalServerError(`Send notification from server error`, error);
+    throw httpErrors.InternalServerError(`Send FriendRequestService from server error ${error}`);
   }
 };
 
@@ -111,7 +111,7 @@ const listRequestfriendWaitResponeService = async (userId) => {
   }
 };
 
-const acceptFriendRequestService = async (userId, senderId, notificationId) => {
+const acceptFriendRequestService = async (userId, senderId) => {
   try {
     const existingRequest = await FriendRequestModel.findOneAndDelete({
       sender_id: senderId,
@@ -134,14 +134,35 @@ const acceptFriendRequestService = async (userId, senderId, notificationId) => {
       { upsert: true }
     );
     Promise.all([
-      sendNotification(senderId, `Bạn và ${userId} đã trở thành bạn bè`),
-      markNotificationAsRead(notificationId),
+      sendNotification(senderId, userId, `Bạn và ${userId} đã trở thành bạn bè`),
+      markNotificationAsRead(userId, senderId),
     ]);
     return { status: true, message: `Bạn và ${senderId} đã trở thành bạn bè` };
   } catch (error) {
     throw httpErrors.InternalServerError(`Confirm friend request error`, error);
   }
 };
+
+const rejectriendRequestService = async (userId, senderId) => {
+  try {
+    const result = await FriendRequestModel.findOneAndDelete({
+      sender_id: senderId,
+      receiver_id: userId,
+    });
+
+    if (!result) {
+      throw httpErrors.NotFound(`Friend request not found for user: ${friendId}`);
+    }
+    await markNotificationAsRead(userId, senderId);
+    return true;
+  } catch (error) {
+    if (error instanceof httpErrors.NotFound) {
+      throw error;
+    }
+    throw httpErrors.InternalServerError(`rejectriendRequestService request error ${error}`);
+  }
+};
+
 const revocationRequestFriendService = async (userId, friendId) => {
   try {
     const result = await FriendRequestModel.findOneAndDelete({
@@ -227,7 +248,7 @@ module.exports = {
   getFriendListSortedByName,
   updateUserInfoService,
   acceptFriendRequestService,
-  rejectFriendRequestService,
+  rejectriendRequestService,
   listRequestFriendService,
   revocationRequestFriendService,
   getListFriendService,

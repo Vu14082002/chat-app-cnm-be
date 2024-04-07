@@ -8,12 +8,12 @@ const openai = new OpenAI({
 const checkMessageHelper = async (message) => {
   try {
     const respone = await openai.chat.completions.create({
-      model: 'gpt-3.5-turbo',
+      model: 'gpt-4',
       messages: [
         {
           role: 'system',
           content:
-            'Chỉ trả lời true hoặc false, chỉ trả lời là false nếu các tin nhắn ở mức độ cực kỳ cực kỳ giống, hoặc prompt có chứ nội dung không lành mạnh ở mức độ cực kỳ cực kỳ giống, hoặc có từ ngữ chừi thề ở mức độ cực kỳ cực kỳ giống, xúc phạm ở mức độ cực kỳ cực kỳ giống, tất cả các trường hợp còn lại đều là true,các tử không có ý nghĩa hoặc lỗi chính tả đều là true',
+            'Trả lời false nếu câu  đó chắc chắn có ý nghĩa đồi trụy hoặc bạo lực đe dọa tính mạng. Mọi trường hợp khác được coi là true. (chú ý cách dùng từ người Việt Nam và ưu tiên là true)',
         },
         { role: 'user', content: message },
       ],

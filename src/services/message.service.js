@@ -172,20 +172,24 @@ const setPinMesssageService = async (messageId) => {
 const unPinMessageService = async (messageId) => {
   try {
     const message = await MessageModel.findById(messageId);
+    if (!message) {
+      throw createHttpError.NotFound(`Message: ${messageId} can not found`);
+    }
     const conversation = await ConversationModel.findOneAndUpdate(
       { _id: message.conversation },
       { $pull: { pinnedMessages: message._id } },
       { new: true }
     );
     if (!conversation) {
-      throw createHttpError.NotFound('Message', messageId, ' have not pin');
+      throw createHttpError.NotFound(`This Message: ${messageId} have not pin`);
     }
     return true;
   } catch (error) {
+    console.log(error);
     if (error instanceof createHttpError.NotFound) {
       throw error;
     }
-    throw createHttpError.InternalServerError('Pin message something wrong', error);
+    throw createHttpError.InternalServerError(`Unpin message something wrong ${error}`);
   }
 };
 
