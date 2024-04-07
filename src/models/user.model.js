@@ -47,12 +47,12 @@ const userSchema = mongoose.Schema(
     qrCode: {
       type: String,
     },
-    friends: [
-      {
-        type: String,
-        ref: 'UserModel',
-      },
-    ],
+    // friends: [
+    //   {
+    //     type: String,
+    //     ref: 'UserModel',
+    //   },
+    // ],
   },
   {
     collection: 'users',

@@ -190,6 +190,18 @@ const updateUserInfoService = async (user) => {
 
   return await UserModel.findOne({ _id });
 };
+const getListFriendService = async (userId) => {
+  try {
+    const listFriend = await FriendshipModel.findById(userId).populate({
+      path: 'friends',
+      select: 'name avatar',
+      options: { sort: { name: 1 } },
+    });
+    return listFriend;
+  } catch (error) {
+    throw httpErrors.InternalServerError(`revocationRequestFriendService request error`, error);
+  }
+};
 
 module.exports = {
   findUserByIdService,
@@ -204,4 +216,5 @@ module.exports = {
   rejectFriendRequestService,
   listRequestFriendService,
   revocationRequestFriendService,
+  getListFriendService,
 };
