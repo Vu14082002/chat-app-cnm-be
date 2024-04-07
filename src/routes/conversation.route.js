@@ -12,4 +12,5 @@ conversationRouter.route('/').get(trimRequest.all, checkAuthorized, getConversat
 conversationRouter
   .route('/pin/:conversationId')
   .get(trimRequest.all, checkAuthorized, pinConversation);
+
 module.exports = { conversationRouter };

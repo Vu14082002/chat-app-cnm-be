@@ -1,6 +1,7 @@
 const createHttpError = require('http-errors');
 const { ConversationModel } = require('../models/conversation.model');
 const { UserModel } = require('../models/user.model');
+const httpErrors = require('http-errors');
 
 const checkExistConversation = async (senderUserId, receiverUserId) => {
   let conversationList = await ConversationModel.findOne({
@@ -74,6 +75,8 @@ const getListUserConversations = async (userId) => {
       } else if (userBPinned) {
         return 1;
       } else {
+        if (!b.lastMessage || !a.lastMessage) return b.updatedAt - a.updatedAt;
+
         return b.lastMessage.updatedAt - a.lastMessage.updatedAt;
       }
     });
@@ -83,6 +86,7 @@ const getListUserConversations = async (userId) => {
       select: 'name avatar status',
     });
   } catch (error) {
+    console.error(error);
     throw httpErrors.InternalServerError(`getListUserConversations from server error`, error);
   }
   return conversations;
@@ -101,44 +105,21 @@ const updateLastMessage = async (conversationId, message) => {
     throw createHttpError.InternalServerError('updateLastMessage error, Try later');
   }
 };
-// pin cũ rồi
-// const pinConversationService = async ({ conversationId, userId }) => {
-//   try {
-//     const updatedConversation = await ConversationModel.findOneAndUpdate(
-//       { _id: conversationId, users: { $in: [userId] }, pinBy: { $nin: [userId] } },
-//       { $addToSet: { pinBy: userId } },
-//       { new: true }
-//     );
-//     if (!updatedConversation) {
-//       throw createHttpError.BadRequest('Invalid conversation or user is already pinned');
-//     }
-//     return true;
-//   } catch (error) {
-//     console.error(error);
-//     throw createHttpError.InternalServerError('Failed to pin conversation', error);
-//   }
-// };
+
 const pinConversationService = async ({ conversationId, userId }) => {
   try {
-    const conversation = await ConversationModel.findById(conversationId);
-    if (!conversation) {
-      throw createHttpError.NotFound('Invalid conversation');
+    const updatedConversation = await ConversationModel.findOneAndUpdate(
+      { _id: conversationId, users: { $in: [userId] }, pinBy: { $nin: [userId] } },
+      { $addToSet: { pinBy: userId } },
+      { new: true }
+    );
+    if (!updatedConversation) {
+      throw createHttpError.BadRequest('Invalid conversation or user is already pinned');
     }
-    const pinIndex = conversation.pinBy.indexOf(userId);
-    if (pinIndex === -1) {
-      // Nếu userId chưa có trong pinBy, thêm vào
-      await ConversationModel.findByIdAndUpdate(conversationId, { $addToSet: { pinBy: userId } });
-    } else {
-      // Nếu userId đã có trong pinBy, loại bỏ ra khỏi mảng
-      await ConversationModel.findByIdAndUpdate(conversationId, { $pull: { pinBy: userId } });
-    }
-
     return true;
   } catch (error) {
-    if (error instanceof createHttpError.NotFound) {
-      throw error;
-    }
-    throw createHttpError.InternalServerError('Failed to unpin conversation', error);
+    console.error(error);
+    throw createHttpError.InternalServerError('Failed to pin conversation', error);
   }
 };
 
@@ -149,5 +130,4 @@ module.exports = {
   getListUserConversations,
   updateLastMessage,
   pinConversationService,
-  unPinConversationService,
 };

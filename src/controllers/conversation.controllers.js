@@ -1,4 +1,3 @@
-const { request, response } = require('express');
 const logger = require('../logger');
 const { StatusCodes } = require('http-status-codes');
 const createHttpError = require('http-errors');
@@ -8,11 +7,10 @@ const {
   populateConversation,
   getListUserConversations,
   pinConversationService,
-  unPinConversationService,
 } = require('../services/conversation.service');
 const { findUserByIdService } = require('../services/user.service');
 
-const openConversation = async (req = request, resp = response, next) => {
+const openConversation = async (req, resp, next) => {
   try {
     const senderUserId = req.user.userId;
     const receiverUserId = req.body.receiverUserId;
@@ -44,7 +42,8 @@ const openConversation = async (req = request, resp = response, next) => {
   }
 };
 
-const getConversations = async (req = request, resp = response, next) => {
+const getConversations = async (req, resp, next) => {
+  console.log('Vao day ne');
   try {
     const userId = req.user.userId;
     const conversations = await getListUserConversations(userId);
@@ -74,4 +73,4 @@ const pinConversation = async (req, resp, next) => {
 //         throw createHttpError.BadRequest('Some thing wrong, Try agian');
 //     }
 // };
-module.exports = { openConversation, getConversations, pinConversation, unPinConversation };
+module.exports = { openConversation, getConversations, pinConversation };
