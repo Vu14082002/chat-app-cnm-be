@@ -23,7 +23,9 @@ messageRouter
 messageRouter.route('/deleteForMe').post(trimRequest.all, checkAuthorized, deleteMessageForMe);
 messageRouter.route('/deleteForAll').post(trimRequest.all, checkAuthorized, deleteMessageForAll);
 messageRouter.route('/pin/:messageId').post(trimRequest.all, checkAuthorized, pinMessage);
-messageRouter.route('/unpinMessage/:messageId').get(trimRequest.all, checkAuthorized, unPinMessage);
+messageRouter
+  .route('/unpinMessage/:messageId')
+  .post(trimRequest.all, checkAuthorized, unPinMessage);
 // TODO: DELETE pin
 // add react
 messageRouter.route('/react').post(trimRequest.all, checkAuthorized, reactForMessage);

@@ -1,10 +1,6 @@
-const mongoose = require('mongoose');
-const ObjectId = mongoose.Types.ObjectId;
 const createHttpError = require('http-errors');
 const { MessageModel } = require('../models/message.model');
 const { ConversationModel } = require('../models/conversation.model');
-const { CommandFailedEvent } = require('mongodb');
-
 const createMessage = async (messageData) => {
   let messageSaved = await MessageModel.create(messageData);
   if (!messageSaved) {
@@ -178,7 +174,7 @@ const unPinMessageService = async (messageId) => {
     const message = await MessageModel.findById(messageId);
     const conversation = await ConversationModel.findOneAndUpdate(
       { _id: message.conversation },
-      { $pull: { pinnedMessages: ObjectId(messageId) } },
+      { $pull: { pinnedMessages: message._id } },
       { new: true }
     );
     if (!conversation) {
