@@ -125,5 +125,17 @@ const socketServer = (socket, io) => {
       socket.in(element._id).emit('stopTyping', { conversationId: conversation._id, userId });
     });
   });
+
+  // Recall message
+  socket.on('recallMessage', (message) => {
+    const conversationId = message?.conversation?._id;
+    if (!conversationId) return;
+
+    message.conversation.users.forEach((element) => {
+      if (element._id === message.sender._id) return;
+
+      socket.in(element._id).emit('recallMessage', message);
+    });
+  });
 };
 module.exports = { socketServer };
