@@ -69,6 +69,7 @@ const getListUserConversations = async (userId) => {
       const userAPinned = a.pinBy.includes(userId);
       const userBPinned = b.pinBy.includes(userId);
       if (userAPinned && userBPinned) {
+        if (!b.lastMessage || !a.lastMessage) return b.updatedAt - a.updatedAt;
         return b.lastMessage.updatedAt - a.lastMessage.updatedAt;
       } else if (userAPinned) {
         return -1;
@@ -76,7 +77,6 @@ const getListUserConversations = async (userId) => {
         return 1;
       } else {
         if (!b.lastMessage || !a.lastMessage) return b.updatedAt - a.updatedAt;
-
         return b.lastMessage.updatedAt - a.lastMessage.updatedAt;
       }
     });
