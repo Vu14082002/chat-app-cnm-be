@@ -7,22 +7,25 @@ const messageSchema = mongoose.Schema(
       type: String,
       ref: 'UserModel',
     },
-    messages: [
-      {
-        content: {
-          type: String,
-          required: true,
+    messages: {
+      type: [
+        {
+          content: {
+            type: String,
+            required: true,
+          },
+          type: {
+            type: String,
+            enum: ['tag', 'text'],
+            default: 'text',
+          },
+          id: {
+            type: String,
+          },
         },
-        type: {
-          type: String,
-          enum: ['tag', 'text'],
-          default: 'text',
-        },
-        id: {
-          type: String,
-        },
-      },
-    ],
+      ],
+      default: [],
+    },
     conversation: {
       type: ObjectId,
       ref: 'ConversationModel',

@@ -23,9 +23,18 @@ const socketServer = (socket, io) => {
     io.emit('usersOnline', userOnline);
   });
   // tạo room socket và join vào
-  socket.on('openConversation', (conversationId) => {
-    socket.join(conversationId);
+  socket.on('openConversation', ({ conversation, user }) => {
+    socket.join(conversation._id);
     console.log(socket.adapter.rooms);
+
+    conversation.users.forEach((element) => {
+      // ko gui lai tin nhan cho nguoi da gui
+      if (element._id === user._id) {
+        return;
+      }
+      //  chi nhung nguoi co trong room moi dc nhan chat
+      socket.in(element._id).emit('openConversation', conversation);
+    });
   });
   // gui doi nguyen model Message  de tao lay id join vòa room
   socket.on('sendMessage', (message) => {
@@ -78,9 +87,6 @@ const socketServer = (socket, io) => {
     userOnline = userOnline.filter((u) => u.socketId !== socket.id);
     io.emit('usersOnline', userOnline);
   });
-  socket.on('openConversation', (conversationId) => {
-    socket.join(conversationId);
-  });
   socket.on('sendMessage', (message) => {
     const conversation = message.conversation;
     if (!conversation) {
@@ -94,12 +100,30 @@ const socketServer = (socket, io) => {
     });
   });
   // typing
-  socket.on('typing', (conversationId) => {
-    socket.in(conversationId).emit('typing');
+  socket.on('typing', ({ conversation, userId }) => {
+    socket.in(conversation._id).emit('typing', userId);
+
+    conversation.users.forEach((element) => {
+      // ko gui lai tin nhan cho nguoi da gui
+      if (element._id === userId) {
+        return;
+      }
+      //  chi nhung nguoi co trong room moi dc nhan chat
+      socket.in(element._id).emit('typing', { conversationId: conversation._id, userId });
+    });
   });
   // stop typing
-  socket.emit('stopTyping', (conversationId) => {
-    socket.in(conversationId).emit('stopTyping');
+  socket.on('stopTyping', ({ conversation, userId }) => {
+    socket.in(conversation._id).emit('stopTyping', userId);
+
+    conversation.users.forEach((element) => {
+      // ko gui lai tin nhan cho nguoi da gui
+      if (element._id === userId) {
+        return;
+      }
+      //  chi nhung nguoi co trong room moi dc nhan chat
+      socket.in(element._id).emit('stopTyping', { conversationId: conversation._id, userId });
+    });
   });
 };
 module.exports = { socketServer };

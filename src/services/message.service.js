@@ -31,6 +31,11 @@ const messagePopulate = async (id) => {
       path: 'reply',
       select: 'sender messages files sticker statuses deleted',
       model: 'MessageModel',
+      populate: {
+        path: 'sender',
+        select: 'name avatar',
+        model: 'UserModel',
+      },
     })
     .populate('location');
   if (!message) {
