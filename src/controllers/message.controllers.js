@@ -95,6 +95,18 @@ const sendMessage = async (req, resp, next) => {
       sticker,
       location,
     };
+    if (
+      messageData.messages.length <= 0 &&
+      messageData.files.length <= 0 &&
+      !messageData.location
+    ) {
+      return resp.status(StatusCodes.OK).json({
+        message: [],
+        invalidFiles,
+        failedUploads: [],
+        invalidMessage: !checkValidMessage,
+      });
+    }
     const messageSaved = await createMessage(messageData);
     await updateLastMessage(conversationId, messageSaved);
     return resp.status(StatusCodes.OK).json({
