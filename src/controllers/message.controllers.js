@@ -101,7 +101,7 @@ const sendMessage = async (req, resp, next) => {
       !messageData.location
     ) {
       return resp.status(StatusCodes.OK).json({
-        message: [],
+        // message: [],
         invalidFiles,
         failedUploads: [],
         invalidMessage: !checkValidMessage,
