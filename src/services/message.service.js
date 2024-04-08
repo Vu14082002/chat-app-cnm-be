@@ -167,7 +167,7 @@ const deleteMessageAllService = async (sender, messageId) => {
   }
 };
 
-const setPinMesssageService = async (messageId) => {
+const setPinMessageService = async (messageId) => {
   try {
     const message = await MessageModel.findById(messageId);
     if (!message) {
@@ -177,9 +177,11 @@ const setPinMesssageService = async (messageId) => {
     const conversation = await ConversationModel.findOne({ _id: message.conversation });
 
     if (conversation) {
-      if (conversation.pinnedMessages.length >= 3) {
-        conversation.pinnedMessages.pop();
-      }
+      const index = conversation.pinnedMessages.findIndex((item) => item.toString() === messageId);
+
+      if (index !== -1) conversation.pinnedMessages.splice(index, 1);
+      else if (conversation.pinnedMessages.length >= 3) conversation.pinnedMessages.pop();
+
       conversation.pinnedMessages.unshift(message);
       await conversation.save();
 
@@ -303,7 +305,7 @@ module.exports = {
   getReplyMessages,
   deleteMessageForMeService,
   deleteMessageAllService,
-  setPinMesssageService,
+  setPinMessageService,
   unPinMessageService,
   reactForMessageService,
   forwardMessageService,

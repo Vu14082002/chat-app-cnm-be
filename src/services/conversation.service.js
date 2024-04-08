@@ -62,7 +62,10 @@ const getListUserConversations = async (userId) => {
         '-createdAt',
         '-updatedAt',
       ])
-      .populate('lastMessage');
+      .populate('lastMessage')
+      .populate({
+        path: 'pinnedMessages',
+      });
 
     // Sắp xếp danh sách cuộc trò chuyện dựa trên trường pinBy và updatedAt
     conversations.sort((a, b) => {
