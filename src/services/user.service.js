@@ -100,7 +100,7 @@ const listRequestFriendService = async (userId) => {
 const listRequestfriendWaitResponeService = async (userId) => {
   try {
     const listRequestFriend = await FriendRequestModel.find({ receiver_id: userId }).populate({
-      path: 'receiver_id',
+      path: 'sender_id',
       select: 'name avatar',
       model: 'UserModel',
     });
