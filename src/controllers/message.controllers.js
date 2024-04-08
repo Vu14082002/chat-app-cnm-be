@@ -8,7 +8,7 @@ const {
   getReplyMessages: getReplyMessagesService,
   deleteMessageForMeService,
   deleteMessageAllService,
-  setPinMesssageService,
+  setPinMessageService,
   reactForMessageService,
   unPinMessageService,
 } = require('../services/message.service');
@@ -164,7 +164,7 @@ const deleteMessageForAll = async (req, resp, next) => {
 const pinMessage = async (req, resp, next) => {
   try {
     const messageId = req.params.messageId;
-    const pin = await setPinMesssageService(messageId);
+    const pin = await setPinMessageService(messageId);
     if (pin) {
       return resp.status(StatusCodes.OK).json({ message: `pin message ${messageId} success` });
     }

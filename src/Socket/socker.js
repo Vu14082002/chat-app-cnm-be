@@ -138,26 +138,26 @@ const socketServer = (socket, io) => {
   });
 
   // Pin message
-  socket.on('pinMessage', ({ message, userId }) => {
+  socket.on('pinMessage', ({ users, message, userId }) => {
     const conversationId = message?.conversation?._id;
-    if (!conversationId) return;
+    if (!conversationId || !users?.length) return;
 
-    message.conversation.users.forEach((element) => {
+    users.forEach((element) => {
       if (element._id === userId) return;
 
-      socket.in(element._id).emit('pinMessage', { message, userId });
+      socket.in(element._id).emit('pinMessage', { message });
     });
   });
 
   // Unpin message
-  socket.on('unpinMessage', ({ message, userId }) => {
+  socket.on('unpinMessage', ({ users, message, userId }) => {
     const conversationId = message?.conversation?._id;
-    if (!conversationId) return;
+    if (!conversationId || !users?.length) return;
 
-    message.conversation.users.forEach((element) => {
+    users.forEach((element) => {
       if (element._id === userId) return;
 
-      socket.in(element._id).emit('unpinMessage', { message, userId });
+      socket.in(element._id).emit('unpinMessage', { message });
     });
   });
 };
