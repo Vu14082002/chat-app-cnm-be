@@ -251,7 +251,6 @@ const reactForMessageService = async (messageId) => {
     );
   }
 };
-
 const forwardMessageService = async (userId, messageId, conversationIds) => {
   const session = await mongoose.startSession({ readPreference: 'primary' });
   session.startTransaction();
@@ -262,13 +261,15 @@ const forwardMessageService = async (userId, messageId, conversationIds) => {
       throw createHttpError.NotFound(`Message ${messageId} not found`);
     }
 
+    const messageSend = [];
+
     await Promise.all(
       conversationIds.map(async (conversationId) => {
         const conversation = await ConversationModel.findById(conversationId);
         if (!conversation) {
-          throw createHttpError.NotFound(`Message ${conversationId} not found`);
+          throw createHttpError.NotFound(`Conversation ${conversationId} not found`);
         }
-        const forwardedMessage = new MessageModel({
+        const forwardedMessage = await MessageModel.create({
           sender: userId,
           messages: message.messages,
           conversation: conversationId,
@@ -280,14 +281,16 @@ const forwardMessageService = async (userId, messageId, conversationIds) => {
           // deleted: message.deleted,
           // usersDeleted: message.usersDeleted,
         });
-        await forwardedMessage.save({ session });
+        // const messageSave = await forwardedMessage.save({ session });
+        // console.log(messageSave);
+        // messageSend.push(messageSave);
+        messageSend.push(forwardedMessage);
         await updateLastMessage(conversationId, forwardedMessage);
-        return true;
       })
     );
     await session.commitTransaction();
     session.endSession();
-    return true;
+    return messageSend;
   } catch (error) {
     await session.abortTransaction();
     session.endSession();

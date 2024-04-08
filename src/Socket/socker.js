@@ -50,6 +50,18 @@ const socketServer = (socket, io) => {
       socket.in(element._id).emit('receivedMessage', message);
     });
   });
+  // socket.on('forwardMessage', async ({ conversation, message }) => {
+  //   const conversation = message.conversation;
+  //   if (!conversation) {
+  //     return;
+  //   }
+  //   conversation.users.forEach((element) => {
+  //     if (element._id === message.sender._id) {
+  //       return;
+  //     }
+  //     socket.in(element._id).emit('receivedMessage', message);
+  //   });
+  // });
   // {}
   socket.on('addFriend', (message) => {
     const friend = userOnline.find((user) => user.userId === message);
