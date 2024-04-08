@@ -50,6 +50,22 @@ const socketServer = (socket, io) => {
       socket.in(element._id).emit('receivedMessage', message);
     });
   });
+  socket.on('forward', (messages) => {
+    messages.forEach((message) => {
+      const conversation = message.conversation;
+      if (!conversation) {
+        return;
+      }
+      conversation.users.forEach((element) => {
+        // ko gui lai tin nhan cho nguoi da gui
+        if (element._id === message.sender._id) {
+          return;
+        }
+        //  chi nhung nguoi co trong room moi dc nhan chat
+        socket.in(element._id).emit('receivedMessage', message);
+      });
+    });
+  });
   // socket.on('forwardMessage', async ({ conversation, message }) => {
   //   const conversation = message.conversation;
   //   if (!conversation) {
