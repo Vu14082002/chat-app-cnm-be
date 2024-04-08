@@ -11,6 +11,7 @@ const {
   setPinMesssageService,
   reactForMessageService,
   unPinMessageService,
+  forwardMessageService,
 } = require('../services/message.service');
 const { updateLastMessage } = require('../services/conversation.service');
 const { uploadToS3 } = require('../helpers/uploadToS3.helper');
@@ -125,7 +126,6 @@ const getReplyMessages = async (req = request, resp = response, next) => {
     const replyMessages = await getReplyMessagesService(replyId);
     resp.status(StatusCodes.OK).json(replyMessages);
   } catch (error) {
-    console.error(error);
     next(error);
   }
 };
@@ -198,6 +198,17 @@ const reactForMessage = async (req, resp, next) => {
     next(error);
   }
 };
+const forwardMessage = async (req, resp, next) => {
+  try {
+    const userId = req.user.userId;
+    const { messageId, conversationIds } = req.body;
+    return resp
+      .status(StatusCodes.OK)
+      .json(await forwardMessageService(userId, messageId, conversationIds));
+  } catch (error) {
+    next(error);
+  }
+};
 
 module.exports = {
   sendMessage,
@@ -208,4 +219,5 @@ module.exports = {
   pinMessage,
   unPinMessage,
   reactForMessage,
+  forwardMessage,
 };

@@ -1,6 +1,8 @@
 const createHttpError = require('http-errors');
+const mongoose = require('mongoose');
 const { MessageModel } = require('../models/message.model');
 const { ConversationModel } = require('../models/conversation.model');
+const { updateLastMessage } = require('./conversation.service');
 const createMessage = async (messageData) => {
   let messageSaved = await MessageModel.create(messageData);
   if (!messageSaved) {
@@ -248,6 +250,52 @@ const reactForMessageService = async (messageId) => {
   }
 };
 
+const forwardMessageService = async (userId, messageId, conversationIds) => {
+  const session = await mongoose.startSession({ readPreference: 'primary' });
+  session.startTransaction();
+  console.log(conversationIds);
+  try {
+    const message = await MessageModel.findById(messageId).session(session);
+    if (!message) {
+      throw createHttpError.NotFound(`Message ${messageId} not found`);
+    }
+
+    await Promise.all(
+      conversationIds.map(async (conversationId) => {
+        const conversation = await ConversationModel.findById(conversationId);
+        if (!conversation) {
+          throw createHttpError.NotFound(`Message ${conversationId} not found`);
+        }
+        const forwardedMessage = new MessageModel({
+          sender: userId,
+          messages: message.messages,
+          conversation: conversationId,
+          files: message.files,
+          location: message.location,
+          sticker: message.sticker,
+          reply: message.reply,
+          statuses: message.statuses,
+          // deleted: message.deleted,
+          // usersDeleted: message.usersDeleted,
+        });
+        await forwardedMessage.save({ session });
+        await updateLastMessage(conversationId, forwardedMessage);
+        return true;
+      })
+    );
+    await session.commitTransaction();
+    session.endSession();
+    return true;
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    if (error instanceof createHttpError.NotFound) {
+      throw error;
+    }
+    throw createHttpError.InternalServerError(`forwardMessageService error: ${error.message}`);
+  }
+};
+
 module.exports = {
   createMessage,
   messagePopulate,
@@ -258,4 +306,5 @@ module.exports = {
   setPinMesssageService,
   unPinMessageService,
   reactForMessageService,
+  forwardMessageService,
 };

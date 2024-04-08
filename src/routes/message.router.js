@@ -11,6 +11,7 @@ const {
   pinMessage,
   reactForMessage,
   unPinMessage,
+  forwardMessage,
 } = require('../controllers/message.controllers');
 // userRouter.route('/updateAvatar').post(checkAuthorized, upload.single('avatar'), updateAvatar);
 const { upload } = require('../configs/multer.config');
@@ -29,5 +30,6 @@ messageRouter
 // TODO: DELETE pin
 // add react
 messageRouter.route('/react').post(trimRequest.all, checkAuthorized, reactForMessage);
+messageRouter.route('/forward').post(trimRequest.all, checkAuthorized, forwardMessage);
 
 module.exports = { messageRouter };
