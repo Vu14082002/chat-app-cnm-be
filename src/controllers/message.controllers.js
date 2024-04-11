@@ -45,7 +45,9 @@ const sendMessage = async (req, resp, next) => {
           };
           const fileExtension = uploadedFile.split('.').pop().toLowerCase();
           if (imageExtensions.includes(fileExtension)) {
-            const checkImg = await checkValidImg(uploadedFile);
+            //FIXME: tắt check img khi nao dung thì bật lên
+            // const checkImg = await checkValidImg(uploadedFile);
+            const checkImg = true;
             if (!checkImg) {
               invalidFiles.push(file.originalname);
             } else {
@@ -55,7 +57,7 @@ const sendMessage = async (req, resp, next) => {
             successfulUploads.push(fileInfo);
           }
         } catch (error) {
-          // TODO: conver to binary và check chua lam
+          // FIXME: conver to binary và check chua lam
           // try {
           //   const dataUri = await convertToBinary(file);
           //   successfulUploads.push(dataUri);
@@ -69,22 +71,23 @@ const sendMessage = async (req, resp, next) => {
     }
 
     let checkValidMessage = true;
-    if (messages?.length > 0) {
-      for (const message of messages) {
-        if (message.type === 'text') {
-          invalidMessageContent.push(message.content);
-        }
-      }
-      const messageContent = invalidMessageContent.join(' ');
-      checkValidMessage = await checkMessageHelper(messageContent);
-      if (!checkValidMessage) {
-        if (!sticker && !files.length && !location) {
-          return resp
-            .status(StatusCodes.OK)
-            .json({ message: [], invalidFiles, failedUploads: [], invalidMessage: true });
-        }
-      }
-    }
+    // TODO: tắt  check chat message
+    // if (messages?.length > 0) {
+    //   for (const message of messages) {
+    //     if (message.type === 'text') {
+    //       invalidMessageContent.push(message.content);
+    //     }
+    //   }
+    //   const messageContent = invalidMessageContent.join(' ');
+    //   checkValidMessage = await checkMessageHelper(messageContent);
+    //   if (!checkValidMessage) {
+    //     if (!sticker && !files.length && !location) {
+    //       return resp
+    //         .status(StatusCodes.OK)
+    //         .json({ message: [], invalidFiles, failedUploads: [], invalidMessage: true });
+    //     }
+    //   }
+    // }
 
     const messageData = {
       sender: userId,
