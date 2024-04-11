@@ -65,6 +65,10 @@ const getListUserConversations = async (userId) => {
       .populate('lastMessage')
       .populate({
         path: 'pinnedMessages',
+        populate: {
+          path: 'sender',
+          select: 'name avatar',
+        },
       });
 
     // Sắp xếp danh sách cuộc trò chuyện dựa trên trường pinBy và updatedAt

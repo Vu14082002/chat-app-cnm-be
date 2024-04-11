@@ -21,7 +21,8 @@ const { checkMessageHelper } = require('../helpers/checkMessage');
 const sendMessage = async (req, resp, next) => {
   try {
     const userId = req.user.userId;
-    const { messages, conversationId, reply, sticker, location } = req.body;
+    const { messages: mess, conversationId, reply, sticker, location } = req.body;
+    let messages = Array.isArray(mess) ? mess : typeof mess === 'string' ? JSON.parse(mess) : [];
     const files = req.files || [];
     const invalidFiles = [];
     const successfulUploads = [];
@@ -98,7 +99,8 @@ const sendMessage = async (req, resp, next) => {
     if (
       messageData.messages.length <= 0 &&
       messageData.files.length <= 0 &&
-      !messageData.location
+      !messageData.location &&
+      !messageData.sticker
     ) {
       return resp.status(StatusCodes.OK).json({
         // message: [],
