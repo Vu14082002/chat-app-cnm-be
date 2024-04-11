@@ -188,5 +188,16 @@ const socketServer = (socket, io) => {
       socket.in(element._id).emit('unpinMessage', { message });
     });
   });
+
+  // React for message
+  socket.on('reactForMessage', ({ users, conversationId, messageId, react, userId }) => {
+    if (!conversationId || !users?.length) return;
+
+    users.forEach((element) => {
+      if (element._id === userId) return;
+
+      socket.in(element._id).emit('reactForMessage', { conversationId, messageId, react, userId });
+    });
+  });
 };
 module.exports = { socketServer };

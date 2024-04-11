@@ -218,7 +218,7 @@ const unPinMessageService = async (messageId) => {
   }
 };
 
-const reactForMessageService = async (messageId) => {
+const reactForMessageService = async (react, userId, messageId) => {
   try {
     const existingMessage = await MessageModel.findById(messageId);
     if (!existingMessage) {
@@ -226,13 +226,13 @@ const reactForMessageService = async (messageId) => {
     }
 
     const existingStatusIndex = existingMessage.statuses.findIndex(
-      (status) => status.user === userReact
+      (status) => status.user === userId
     );
 
     if (react !== undefined && react !== null) {
       if (existingStatusIndex === -1) {
         existingMessage.statuses.push({
-          user: userReact,
+          user: userId,
           react: react,
         });
       } else {
@@ -246,6 +246,7 @@ const reactForMessageService = async (messageId) => {
     const updatedMessage = await existingMessage.save();
     return updatedMessage;
   } catch (error) {
+    console.error(error);
     throw createHttpError.InternalServerError(
       `reactForMessageService encountered an error ${error}`
     );
