@@ -68,8 +68,13 @@ const updateAvatar = async (req, resp, next) => {
 const addfriend = async (req, resp, next) => {
   try {
     const userId = req.user.userId;
-    const { friendId } = req.body;
-    const result = await sendFriendRequestService(userId, friendId);
+    const { friendId, message, blockView } = req.body;
+    const result = await sendFriendRequestService({
+      senderId: userId,
+      receiverId: friendId,
+      message,
+      blockView,
+    });
     if (!result) {
       return resp.status(StatusCodes.BAD_REQUEST).json(result);
     }
