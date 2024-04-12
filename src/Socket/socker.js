@@ -199,5 +199,44 @@ const socketServer = (socket, io) => {
       socket.in(element._id).emit('reactForMessage', { conversationId, messageId, react, userId });
     });
   });
+
+  /**
+   * Friend request
+   * Lấy kết quả trả về từ server và thay: receiver_id thành thông tin user đang đăng nhập
+   * sender_id thành: receiver_id._id của người kết bạn
+   */
+  socket.on('sendFriendRequest', (friendRequest) => {
+    if (!friendRequest) return;
+
+    socket.in(friendRequest.receiver_id).emit('sendFriendRequest', friendRequest);
+  });
+
+  // Accept friend
+  socket.on('acceptFriend', ({ _id, user, senderId }) => {
+    if (!_id || !user || !senderId) return;
+
+    socket.in(senderId).emit('acceptFriend', { _id, user });
+  });
+
+  // Reject friend
+  socket.on('rejectFriend', ({ _id, senderId }) => {
+    if (!_id || !senderId) return;
+
+    socket.in(senderId).emit('rejectFriend', { _id });
+  });
+
+  // revocation Request Friend
+  socket.on('revocationRequestFriend', ({ _id, senderId }) => {
+    if (!_id || !senderId) return;
+
+    socket.in(senderId).emit('revocationRequestFriend', { _id });
+  });
+
+  // Delete friend
+  socket.on('deleteFriend', ({ receiverId, senderId }) => {
+    if (!receiverId || !senderId) return;
+
+    socket.in(receiverId).emit('deleteFriend', { senderId });
+  });
 };
 module.exports = { socketServer };

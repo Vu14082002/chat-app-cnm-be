@@ -5,6 +5,8 @@ const friendsRequestSchema = new mongoose.Schema(
     sender_id: { type: String, ref: 'UserModel', required: true },
     receiver_id: { type: String, ref: 'UserModel', required: true },
     // status: { type: String, enum: ['pending', 'accepted', 'rejected'], default: 'pending' },
+    message: { type: String, default: '' },
+    blockView: { type: Boolean, default: false },
   },
   {
     collection: 'friendrequest',
