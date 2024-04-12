@@ -16,7 +16,8 @@ const ConversationSchema = mongoose.Schema(
     },
     picture: {
       type: String,
-      require: true,
+      require: false,
+      default: '',
     },
     users: {
       type: [

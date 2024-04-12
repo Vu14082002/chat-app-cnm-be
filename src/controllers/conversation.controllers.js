@@ -9,6 +9,7 @@ const {
   pinConversationService,
 } = require('../services/conversation.service');
 const { findUserByIdService } = require('../services/user.service');
+const { uploadToS3 } = require('../helpers/uploadToS3.helper');
 
 const openConversation = async (req, resp, next) => {
   try {
@@ -38,6 +39,74 @@ const openConversation = async (req, resp, next) => {
     );
     return resp.status(StatusCodes.CREATED).json(populateConversationData);
   } catch (error) {
+    next(error);
+  }
+};
+
+const createConversationGroup = async (req, resp, next) => {
+  const userId = req.user.userId;
+  const { avatar, name, users } = req.body;
+  const avatarFile = req.file;
+
+  let picture = avatar;
+
+  try {
+    if (!users) {
+      logger.error('Please Provide user to begin conversation');
+      throw createHttpError.BadGateway('Please Provide name and userIds to begin conversation');
+    }
+
+    if (avatarFile) {
+      const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp'];
+      avatarFile.originalname = `${Date.now()}.${avatarFile.mimetype.split('/')[1]}`;
+      const uploadedFile = await uploadToS3(avatarFile);
+      const fileInfo = {
+        link: uploadedFile,
+        name: avatarFile.originalname,
+        type: avatarFile.mimetype,
+      };
+      const fileExtension = uploadedFile.split('.').pop().toLowerCase();
+      if (imageExtensions.includes(fileExtension)) {
+        //FIXME: tắt check img khi nao dung thì bật lên
+        // const checkImg = await checkValidImg(uploadedFile);
+        const checkImg = true;
+        if (!checkImg) {
+          throw createHttpError.BadGateway('Avatar is not valid');
+        } else {
+          picture = fileInfo.link;
+        }
+      } else {
+        throw createHttpError.BadGateway('Avatar is not valid');
+      }
+    }
+
+    const userArray = Array.isArray(users) ? users : JSON.parse(users);
+    userArray.push(userId);
+
+    const userReceived = await Promise.all(userArray.map((userId) => findUserByIdService(userId)));
+
+    if (!userReceived.every(Boolean)) throw createHttpError.BadGateway('Users not found');
+
+    let conversationData = {
+      name:
+        name ||
+        userReceived
+          .filter((user) => user._id !== userId)
+          .map((user) => user.name)
+          .join(', '),
+      picture,
+      isGroup: true,
+      users: userArray,
+    };
+    const conversationSaved = await createConversation(conversationData);
+    const populateConversationData = await populateConversation(
+      conversationSaved._id,
+      'users',
+      '-password'
+    );
+    return resp.status(StatusCodes.CREATED).json(populateConversationData);
+  } catch (error) {
+    console.error(error);
     next(error);
   }
 };
@@ -73,4 +142,4 @@ const pinConversation = async (req, resp, next) => {
 //         throw createHttpError.BadRequest('Some thing wrong, Try agian');
 //     }
 // };
-module.exports = { openConversation, getConversations, pinConversation };
+module.exports = { openConversation, getConversations, pinConversation, createConversationGroup };
