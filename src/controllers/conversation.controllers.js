@@ -7,6 +7,7 @@ const {
   populateConversation,
   getListUserConversations,
   pinConversationService,
+  getGroupsService,
 } = require('../services/conversation.service');
 const { findUserByIdService } = require('../services/user.service');
 const { uploadToS3 } = require('../helpers/uploadToS3.helper');
@@ -43,6 +44,7 @@ const openConversation = async (req, resp, next) => {
   }
 };
 
+// TODO check friend
 const createConversationGroup = async (req, resp, next) => {
   const userId = req.user.userId;
   const { avatar, name, users } = req.body;
@@ -106,7 +108,18 @@ const createConversationGroup = async (req, resp, next) => {
     );
     return resp.status(StatusCodes.CREATED).json(populateConversationData);
   } catch (error) {
-    console.error(error);
+    next(error);
+  }
+};
+
+const getGroups = async (req, resp, next) => {
+  const userId = req.user.userId;
+
+  try {
+    const conversations = await getGroupsService(userId);
+
+    return resp.status(StatusCodes.OK).json(conversations);
+  } catch (error) {
     next(error);
   }
 };
@@ -142,4 +155,10 @@ const pinConversation = async (req, resp, next) => {
 //         throw createHttpError.BadRequest('Some thing wrong, Try agian');
 //     }
 // };
-module.exports = { openConversation, getConversations, pinConversation, createConversationGroup };
+module.exports = {
+  openConversation,
+  getConversations,
+  pinConversation,
+  createConversationGroup,
+  getGroups,
+};

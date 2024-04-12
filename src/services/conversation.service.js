@@ -98,6 +98,64 @@ const getListUserConversations = async (userId) => {
   return conversations;
 };
 
+const getGroupsService = async (userId) => {
+  let conversations;
+  try {
+    conversations = await ConversationModel.find({
+      $and: [{ users: { $elemMatch: { $eq: userId } } }, { isGroup: true }],
+    })
+      .populate('users', [
+        '-password',
+        '-qrCode',
+        '-background',
+        '-dateOfBirth',
+        '-createdAt',
+        '-updatedAt',
+      ])
+      .populate('admin', [
+        '-password',
+        '-qrCode',
+        '-background',
+        '-dateOfBirth',
+        '-createdAt',
+        '-updatedAt',
+      ])
+      .populate('lastMessage')
+      .populate({
+        path: 'pinnedMessages',
+        populate: {
+          path: 'sender',
+          select: 'name avatar',
+        },
+      });
+
+    // Sắp xếp danh sách cuộc trò chuyện dựa trên trường pinBy và updatedAt
+    conversations.sort((a, b) => {
+      const userAPinned = a.pinBy.includes(userId);
+      const userBPinned = b.pinBy.includes(userId);
+      if (userAPinned && userBPinned) {
+        if (!b.lastMessage || !a.lastMessage) return b.updatedAt - a.updatedAt;
+        return b.lastMessage.updatedAt - a.lastMessage.updatedAt;
+      } else if (userAPinned) {
+        return -1;
+      } else if (userBPinned) {
+        return 1;
+      } else {
+        if (!b.lastMessage || !a.lastMessage) return b.updatedAt - a.updatedAt;
+        return b.lastMessage.updatedAt - a.lastMessage.updatedAt;
+      }
+    });
+    conversations = conversations.filter((conv) => conv.delete !== false);
+    conversations = await UserModel.populate(conversations, {
+      path: 'lastMessage.sender',
+      select: 'name avatar status',
+    });
+  } catch (error) {
+    throw httpErrors.InternalServerError(`getListUserConversations from server error${error}`);
+  }
+  return conversations;
+};
+
 const updateLastMessage = async (conversationId, message) => {
   try {
     const conversationUpdated = await ConversationModel.findByIdAndUpdate(conversationId, {
@@ -140,4 +198,5 @@ module.exports = {
   getListUserConversations,
   updateLastMessage,
   pinConversationService,
+  getGroupsService,
 };
