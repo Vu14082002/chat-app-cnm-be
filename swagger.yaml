@@ -5,8 +5,13 @@ info:
   version: 1.0.0
 servers:
   - url: http://localhost:4000/api/v1
+    description: Local
+  - url: https://homeless-eadith-vunguyendev.koyeb.app/api/v1
+    description: Production
 tags:
   - name: authentication
+  - name: user
+  - name: conversation
 paths:
   /auth/createOTP:
     post:
@@ -255,3 +260,457 @@ paths:
           description: Expired OTP | Invalid OTP
         '500':
           description: Internal server error
+  /user/:
+    get:
+      tags:
+        - user
+      summary: 'Find user by phone'
+      parameters:
+        - name: search
+          in: query
+          description: 'Keyword to search user by phone'
+          required: true
+          type: string
+      responses:
+        200:
+          description: 'Successfully retrieved user'
+        401:
+          description: 'Unauthorized'
+        500:
+          description: 'Internal Server Error'
+
+    patch:
+      tags:
+        - user
+      summary: 'Update user information'
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            properties:
+              name:
+                type: string
+              gender:
+                type: string
+              dateOfBirth:
+                type: string
+      responses:
+        200:
+          description: 'Successfully updated user information'
+        400:
+          description: 'Bad Request'
+        401:
+          description: 'Unauthorized'
+        500:
+          description: 'Internal Server Error'
+
+  /user/info:
+    get:
+      tags:
+        - user
+      summary: 'Get user information'
+      responses:
+        200:
+          description: 'Successfully retrieved user information'
+        401:
+          description: 'Unauthorized'
+        500:
+          description: 'Internal Server Error'
+
+  /user/listFriend:
+    get:
+      tags:
+        - user
+      summary: 'Get list of friends'
+      responses:
+        200:
+          description: 'Successfully retrieved list of friends'
+        401:
+          description: 'Unauthorized'
+        500:
+          description: 'Internal Server Error'
+
+  /user/addfriend:
+    post:
+      tags:
+        - user
+      summary: 'Send friend request'
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            properties:
+              friendId:
+                type: string
+              message:
+                type: string
+              blockView:
+                type: boolean
+      responses:
+        200:
+          description: 'Friend request sent successfully'
+        400:
+          description: 'Bad Request'
+        401:
+          description: 'Unauthorized'
+        500:
+          description: 'Internal Server Error'
+
+  /user/listRequestFriend:
+    get:
+      tags:
+        - user
+      summary: 'Get list of friend requests sent'
+      responses:
+        200:
+          description: 'Successfully retrieved list of friend requests sent'
+        401:
+          description: 'Unauthorized'
+        500:
+          description: 'Internal Server Error'
+
+  /user/listRequestfriendWaitRespone:
+    get:
+      tags:
+        - user
+      summary: 'Get list of friend requests waiting for response'
+      responses:
+        200:
+          description: 'Successfully retrieved list of friend requests waiting for response'
+        401:
+          description: 'Unauthorized'
+        500:
+          description: 'Internal Server Error'
+
+  /user/acceptfriend:
+    post:
+      tags:
+        - user
+      summary: 'Accept friend request'
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            properties:
+              friendId:
+                type: string
+      responses:
+        200:
+          description: 'Friend request accepted successfully'
+        400:
+          description: 'Bad Request'
+        401:
+          description: 'Unauthorized'
+        500:
+          description: 'Internal Server Error'
+
+  /user/rejectfriend:
+    post:
+      tags:
+        - user
+      summary: 'Reject friend request'
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            properties:
+              friendId:
+                type: string
+      responses:
+        200:
+          description: 'Friend request rejected successfully'
+        400:
+          description: 'Bad Request'
+        401:
+          description: 'Unauthorized'
+        500:
+          description: 'Internal Server Error'
+
+  /user/revocationRequestFriend:
+    post:
+      tags:
+        - user
+      summary: 'Revoke friend request'
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            properties:
+              friendId:
+                type: string
+      responses:
+        200:
+          description: 'Friend request revoked successfully'
+        401:
+          description: 'Unauthorized'
+        500:
+          description: 'Internal Server Error'
+
+  /user/deletefriend:
+    delete:
+      tags:
+        - user
+      summary: 'Delete friend'
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            properties:
+              friendId:
+                type: string
+      responses:
+        200:
+          description: 'Friend deleted successfully'
+        401:
+          description: 'Unauthorized'
+        500:
+          description: 'Internal Server Error'
+
+  /user/updateAvatar:
+    post:
+      tags:
+        - user
+      summary: 'Update user avatar'
+      consumes:
+        - 'multipart/form-data'
+      parameters:
+        - in: formData
+          name: avatar
+          type: file
+          required: true
+      responses:
+        200:
+          description: 'Avatar updated successfully'
+        401:
+          description: 'Unauthorized'
+        500:
+          description: 'Internal Server Error'
+  /conversation/:
+    post:
+      tags:
+        - conversation
+      summary: 'Open conversation'
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            properties:
+              receiverUserId:
+                type: string
+      responses:
+        201:
+          description: 'Conversation opened successfully'
+        400:
+          description: 'Bad Request'
+        401:
+          description: 'Unauthorized'
+        500:
+          description: 'Internal Server Error'
+
+    get:
+      tags:
+        - conversation
+      summary: 'Get user conversations'
+      responses:
+        200:
+          description: 'Successfully retrieved user conversations'
+        401:
+          description: 'Unauthorized'
+        500:
+          description: 'Internal Server Error'
+
+  /conversation/group:
+    post:
+      tags:
+        - conversation
+      summary: 'Create conversation group'
+      consumes:
+        - 'multipart/form-data'
+      parameters:
+        - in: formData
+          name: avatar
+          type: file
+          required: false
+        - in: formData
+          name: name
+          type: string
+          required: true
+        - in: formData
+          name: users
+          type: array
+          required: true
+      responses:
+        201:
+          description: 'Group conversation created successfully'
+        400:
+          description: 'Bad Request'
+        401:
+          description: 'Unauthorized'
+        500:
+          description: 'Internal Server Error'
+
+    get:
+      tags:
+        - conversation
+      summary: 'Get groups'
+      responses:
+        200:
+          description: 'Successfully retrieved groups'
+        401:
+          description: 'Unauthorized'
+        500:
+          description: 'Internal Server Error'
+
+  /conversation/group/{conversationId}:
+    delete:
+      tags:
+        - conversation
+      summary: 'Delete conversation'
+      parameters:
+        - in: path
+          name: conversationId
+          type: string
+          required: true
+      responses:
+        200:
+          description: 'Conversation deleted successfully'
+        401:
+          description: 'Unauthorized'
+        500:
+          description: 'Internal Server Error'
+
+  /conversation/group/{conversationId}/users:
+    post:
+      tags:
+        - conversation
+      summary: 'Add user to group conversation'
+      parameters:
+        - in: path
+          name: conversationId
+          type: string
+          required: true
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            properties:
+              userIds:
+                type: array
+                items:
+                  type: string
+      responses:
+        200:
+          description: 'User added to group conversation successfully'
+        401:
+          description: 'Unauthorized'
+        500:
+          description: 'Internal Server Error'
+
+  /conversation/group/{conversationId}/users/{userId}:
+    delete:
+      tags:
+        - conversation
+      summary: 'Remove user from group conversation'
+      parameters:
+        - in: path
+          name: conversationId
+          type: string
+          required: true
+        - in: path
+          name: userId
+          type: string
+          required: true
+      responses:
+        200:
+          description: 'User removed from group conversation successfully'
+        401:
+          description: 'Unauthorized'
+        500:
+          description: 'Internal Server Error'
+
+  /conversation/group/{conversationId}/users/{userId}/role:
+    post:
+      tags:
+        - conversation
+      summary: 'Add role to user in group conversation'
+      parameters:
+        - in: path
+          name: conversationId
+          type: string
+          required: true
+        - in: path
+          name: userId
+          type: string
+          required: true
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            properties:
+              role:
+                type: string
+                enum: ['owner', 'admin']
+      responses:
+        200:
+          description: 'Role added to user in group conversation successfully'
+        400:
+          description: 'Bad Request'
+        401:
+          description: 'Unauthorized'
+        500:
+          description: 'Internal Server Error'
+
+    delete:
+      tags:
+        - conversation
+      summary: 'Remove role from user in group conversation'
+      parameters:
+        - in: path
+          name: conversationId
+          type: string
+          required: true
+        - in: path
+          name: userId
+          type: string
+          required: true
+      responses:
+        200:
+          description: 'Role removed from user in group conversation successfully'
+        401:
+          description: 'Unauthorized'
+        500:
+          description: 'Internal Server Error'
+
+  /conversation/pin/{conversationId}:
+    get:
+      tags:
+        - conversation
+      summary: 'Pin conversation'
+      parameters:
+        - in: path
+          name: conversationId
+          type: string
+          required: true
+      responses:
+        200:
+          description: 'Conversation pinned successfully'
+        401:
+          description: 'Unauthorized'
+        500:
+          description: 'Internal Server Error'
