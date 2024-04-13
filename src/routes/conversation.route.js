@@ -21,7 +21,9 @@ conversationRouter
 conversationRouter.route('/group').get(checkAuthorized, getGroups);
 conversationRouter.route('/group/:conversationId').delete(checkAuthorized, deleteConversation);
 conversationRouter.route('/group/:conversationId/users').post(checkAuthorized, addUser);
-conversationRouter.route('/group/:conversationId/users').delete(checkAuthorized, removeUser);
+conversationRouter
+  .route('/group/:conversationId/users/:userId')
+  .delete(checkAuthorized, removeUser);
 conversationRouter
   .route('/group/:conversationId/users/:userId/role')
   .post(checkAuthorized, addRole);

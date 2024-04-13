@@ -11,6 +11,7 @@ const {
   deleteConversationService,
   addUsersService,
   getConversationService,
+  removeUserService,
 } = require('../services/conversation.service');
 const { findUserByIdService } = require('../services/user.service');
 const { uploadToS3 } = require('../helpers/uploadToS3.helper');
@@ -169,11 +170,11 @@ const deleteConversation = async (req, resp, next) => {
 
     return resp.status(StatusCodes.OK).json(conversation);
   } catch (error) {
-    console.error(error);
     next(error);
   }
 };
 
+// Check role: admin or owner
 const addUser = async (req, resp, next) => {
   const conversationId = req.params.conversationId;
   const { userIds } = req.body;
@@ -185,12 +186,26 @@ const addUser = async (req, resp, next) => {
 
     return resp.status(StatusCodes.OK).json(conversation);
   } catch (error) {
-    console.error(error);
     next(error);
   }
 };
 
-const removeUser = () => {};
+// Check role: admin or owner
+const removeUser = async (req, resp, next) => {
+  const { conversationId, userId } = req.params;
+  const { blockRejoin } = req.query;
+
+  try {
+    await removeUserService({ conversationId, userId, blockRejoin });
+
+    const conversation = await getConversationService(conversationId);
+
+    return resp.status(StatusCodes.OK).json(conversation);
+  } catch (error) {
+    next(next);
+  }
+};
+
 const addRole = () => {};
 const removeRole = () => {};
 

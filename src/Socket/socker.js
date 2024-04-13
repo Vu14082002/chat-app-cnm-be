@@ -258,5 +258,11 @@ const socketServer = (socket, io) => {
       socket.in(element).emit('addOrUpdateConversation', { conversation });
     });
   });
+
+  socket.on('removeUserFromConversation', ({ conversationId, userId }) => {
+    if (!conversationId || !userId) return;
+
+    socket.in(userId).emit('removeUserFromConversation', { conversationId });
+  });
 };
 module.exports = { socketServer };

@@ -235,6 +235,23 @@ const addUsersService = async ({ conversationId, userIds }) => {
   }
 };
 
+const removeUserService = async ({ conversationId, userId, blockRejoin }) => {
+  try {
+    const updated = {
+      $pull: { users: userId },
+    };
+
+    if (blockRejoin === 'true') updated.$addToSet = { bannedMembers: userId };
+
+    const conversation = await ConversationModel.findByIdAndUpdate(conversationId, updated);
+    if (!conversation) throw createHttpError.NotFound('Invalid conversation');
+
+    return conversation;
+  } catch (error) {
+    throw createHttpError.InternalServerError('Failed to remove user from conversation', error);
+  }
+};
+
 module.exports = {
   checkExistConversation,
   createConversation,
@@ -246,4 +263,5 @@ module.exports = {
   deleteConversationService,
   addUsersService,
   getConversationService,
+  removeUserService,
 };
