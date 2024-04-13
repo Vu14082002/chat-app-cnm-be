@@ -12,6 +12,9 @@ const {
   addUsersService,
   getConversationService,
   removeUserService,
+  setOwnerRoleService,
+  addAdminRole,
+  removeAdminRole,
 } = require('../services/conversation.service');
 const { findUserByIdService } = require('../services/user.service');
 const { uploadToS3 } = require('../helpers/uploadToS3.helper');
@@ -206,8 +209,40 @@ const removeUser = async (req, resp, next) => {
   }
 };
 
-const addRole = () => {};
-const removeRole = () => {};
+const addRole = async (req, resp, next) => {
+  const { conversationId, userId } = req.params;
+  const { role } = req.body;
+
+  try {
+    if (role === 'owner') {
+      await setOwnerRoleService({ conversationId, userId });
+    } else if (role === 'admin') {
+      await addAdminRole({ conversationId, userId });
+    } else {
+      throw createHttpError.BadRequest('Invalid role');
+    }
+
+    const conversation = await getConversationService(conversationId);
+
+    return resp.status(StatusCodes.OK).json(conversation);
+  } catch (error) {
+    next(error);
+  }
+};
+
+const removeRole = async (req, resp, next) => {
+  const { conversationId, userId } = req.params;
+
+  try {
+    await removeAdminRole({ conversationId, userId });
+
+    const conversation = await getConversationService(conversationId);
+
+    return resp.status(StatusCodes.OK).json(conversation);
+  } catch (error) {
+    next(error);
+  }
+};
 
 module.exports = {
   openConversation,

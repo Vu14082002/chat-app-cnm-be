@@ -252,6 +252,49 @@ const removeUserService = async ({ conversationId, userId, blockRejoin }) => {
   }
 };
 
+const setOwnerRoleService = async ({ conversationId, userId }) => {
+  try {
+    const conversation = await ConversationModel.findByIdAndUpdate(conversationId, {
+      $set: {
+        admin: userId,
+      },
+    });
+    if (!conversation) throw createHttpError.NotFound('Invalid conversation');
+
+    return conversation;
+  } catch (error) {
+    throw createHttpError.InternalServerError('Failed to set owner role', error);
+  }
+};
+
+const addAdminRole = async ({ conversationId, userId }) => {
+  try {
+    const conversation = await ConversationModel.findByIdAndUpdate(conversationId, {
+      $addToSet: { deputy: userId },
+    });
+
+    if (!conversation) throw createHttpError.NotFound('Invalid conversation');
+
+    return conversation;
+  } catch (error) {
+    throw createHttpError.InternalServerError('Failed to add admin role', error);
+  }
+};
+
+const removeAdminRole = async ({ conversationId, userId }) => {
+  try {
+    const conversation = await ConversationModel.findByIdAndUpdate(conversationId, {
+      $pull: { deputy: userId },
+    });
+
+    if (!conversation) throw createHttpError.NotFound('Invalid conversation');
+
+    return conversation;
+  } catch (error) {
+    throw createHttpError.InternalServerError('Failed to remove admin role', error);
+  }
+};
+
 module.exports = {
   checkExistConversation,
   createConversation,
@@ -264,4 +307,7 @@ module.exports = {
   addUsersService,
   getConversationService,
   removeUserService,
+  setOwnerRoleService,
+  addAdminRole,
+  removeAdminRole,
 };
