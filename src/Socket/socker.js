@@ -35,6 +35,17 @@ const socketServer = (socket, io) => {
       socket.in(element._id).emit('openConversation', conversation);
     });
   });
+
+  // Delete conversation: nhận conversationId và userIds, gửi đến các user trong userIds
+  socket.on('deleteConversation', ({ _id, userIds, userId }) => {
+    if (!_id || !userIds?.length) return;
+
+    userIds.forEach((uId) => {
+      if (uId === userId) return;
+      socket.in(uId).emit('deleteConversation', { _id });
+    });
+  });
+
   // gui doi nguyen model Message  de tao lay id join vòa room
   socket.on('sendMessage', (message) => {
     const conversation = message.conversation;

@@ -8,6 +8,7 @@ const {
   getListUserConversations,
   pinConversationService,
   getGroupsService,
+  deleteConversationService,
 } = require('../services/conversation.service');
 const { findUserByIdService } = require('../services/user.service');
 const { uploadToS3 } = require('../helpers/uploadToS3.helper');
@@ -99,6 +100,7 @@ const createConversationGroup = async (req, resp, next) => {
       picture,
       isGroup: true,
       users: userArray,
+      admin: userId,
     };
     const conversationSaved = await createConversation(conversationData);
     const populateConversationData = await populateConversation(
@@ -155,10 +157,35 @@ const pinConversation = async (req, resp, next) => {
 //         throw createHttpError.BadRequest('Some thing wrong, Try agian');
 //     }
 // };
+
+// TODO Kiểm tra user có quyền giải tán hay không? (Field admin)
+const deleteConversation = async (req, resp, next) => {
+  const conversationId = req.params.conversationId;
+
+  try {
+    const conversation = await deleteConversationService(conversationId);
+
+    return resp.status(StatusCodes.OK).json(conversation);
+  } catch (error) {
+    console.error(error);
+    next(error);
+  }
+};
+
+const addUser = () => {};
+const removeUser = () => {};
+const addRole = () => {};
+const removeRole = () => {};
+
 module.exports = {
   openConversation,
   getConversations,
   pinConversation,
   createConversationGroup,
   getGroups,
+  deleteConversation,
+  addUser,
+  removeUser,
+  addRole,
+  removeRole,
 };

@@ -44,17 +44,9 @@ const getListUserConversations = async (userId) => {
   let conversations;
   try {
     conversations = await ConversationModel.find({
-      users: { $elemMatch: { $eq: userId } },
+      $and: [{ users: { $elemMatch: { $eq: userId } } }, { deleted: false }],
     })
       .populate('users', [
-        '-password',
-        '-qrCode',
-        '-background',
-        '-dateOfBirth',
-        '-createdAt',
-        '-updatedAt',
-      ])
-      .populate('admin', [
         '-password',
         '-qrCode',
         '-background',
@@ -102,17 +94,9 @@ const getGroupsService = async (userId) => {
   let conversations;
   try {
     conversations = await ConversationModel.find({
-      $and: [{ users: { $elemMatch: { $eq: userId } } }, { isGroup: true }],
+      $and: [{ users: { $elemMatch: { $eq: userId } } }, { isGroup: true }, { deleted: false }],
     })
       .populate('users', [
-        '-password',
-        '-qrCode',
-        '-background',
-        '-dateOfBirth',
-        '-createdAt',
-        '-updatedAt',
-      ])
-      .populate('admin', [
         '-password',
         '-qrCode',
         '-background',
@@ -191,6 +175,19 @@ const pinConversationService = async ({ conversationId, userId }) => {
   }
 };
 
+const deleteConversationService = async (conversationId) => {
+  try {
+    const conversation = await ConversationModel.findByIdAndUpdate(conversationId, {
+      deleted: true,
+    });
+    if (!conversation) throw createHttpError.NotFound('Invalid conversation');
+
+    return conversation;
+  } catch (error) {
+    throw createHttpError.InternalServerError('Failed to delete conversation', error);
+  }
+};
+
 module.exports = {
   checkExistConversation,
   createConversation,
@@ -199,4 +196,5 @@ module.exports = {
   updateLastMessage,
   pinConversationService,
   getGroupsService,
+  deleteConversationService,
 };
