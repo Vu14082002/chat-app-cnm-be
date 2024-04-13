@@ -120,6 +120,7 @@ const createConversationGroup = async (req, resp, next) => {
   }
 };
 
+// TODO get groups chưa bị ban
 const getGroups = async (req, resp, next) => {
   const userId = req.user.userId;
 
@@ -132,6 +133,7 @@ const getGroups = async (req, resp, next) => {
   }
 };
 
+// FIXME Khi get conversations thì last message được lấy ra tuỳ vào user
 const getConversations = async (req, resp, next) => {
   console.log('Vao day ne');
   try {
@@ -177,7 +179,8 @@ const deleteConversation = async (req, resp, next) => {
   }
 };
 
-// Check role: admin or owner
+// TODO Check role: admin or owner
+// Phê duyệt thành viên khi thành viên đó tham gia bằng link hoặc đươc member mời
 const addUser = async (req, resp, next) => {
   const conversationId = req.params.conversationId;
   const { userIds } = req.body;
@@ -193,7 +196,7 @@ const addUser = async (req, resp, next) => {
   }
 };
 
-// Check role: admin or owner
+// TODO Check role: admin or owner
 const removeUser = async (req, resp, next) => {
   const { conversationId, userId } = req.params;
   const { blockRejoin } = req.query;
