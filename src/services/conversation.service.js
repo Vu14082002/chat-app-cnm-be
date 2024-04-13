@@ -140,6 +140,40 @@ const getGroupsService = async (userId) => {
   return conversations;
 };
 
+const getConversationService = async (conversationId) => {
+  try {
+    const conversation = await ConversationModel.findById(conversationId)
+      .populate('users', [
+        '-password',
+        '-qrCode',
+        '-background',
+        '-dateOfBirth',
+        '-createdAt',
+        '-updatedAt',
+      ])
+      .populate('lastMessage')
+      .populate({
+        path: 'pinnedMessages',
+        populate: {
+          path: 'sender',
+          select: 'name avatar',
+        },
+      });
+
+    if (conversation.delete === true) {
+      throw createHttpError.NotFound('Conversation not found');
+    }
+
+    return await UserModel.populate(conversation, {
+      path: 'lastMessage.sender',
+      select: 'name avatar status',
+    });
+  } catch (error) {
+    console.error(error);
+    throw httpErrors.InternalServerError(`getListUserConversations from server error${error}`);
+  }
+};
+
 const updateLastMessage = async (conversationId, message) => {
   try {
     const conversationUpdated = await ConversationModel.findByIdAndUpdate(conversationId, {
@@ -188,6 +222,19 @@ const deleteConversationService = async (conversationId) => {
   }
 };
 
+const addUsersService = async ({ conversationId, userIds }) => {
+  try {
+    const conversation = await ConversationModel.findByIdAndUpdate(conversationId, {
+      $addToSet: { users: userIds },
+    });
+    if (!conversation) throw createHttpError.NotFound('Invalid conversation');
+
+    return conversation;
+  } catch (error) {
+    throw createHttpError.InternalServerError('Failed to add users to conversation', error);
+  }
+};
+
 module.exports = {
   checkExistConversation,
   createConversation,
@@ -197,4 +244,6 @@ module.exports = {
   pinConversationService,
   getGroupsService,
   deleteConversationService,
+  addUsersService,
+  getConversationService,
 };

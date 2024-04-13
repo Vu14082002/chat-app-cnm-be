@@ -9,6 +9,8 @@ const {
   pinConversationService,
   getGroupsService,
   deleteConversationService,
+  addUsersService,
+  getConversationService,
 } = require('../services/conversation.service');
 const { findUserByIdService } = require('../services/user.service');
 const { uploadToS3 } = require('../helpers/uploadToS3.helper');
@@ -172,7 +174,22 @@ const deleteConversation = async (req, resp, next) => {
   }
 };
 
-const addUser = () => {};
+const addUser = async (req, resp, next) => {
+  const conversationId = req.params.conversationId;
+  const { userIds } = req.body;
+
+  try {
+    await addUsersService({ conversationId, userIds });
+
+    const conversation = await getConversationService(conversationId);
+
+    return resp.status(StatusCodes.OK).json(conversation);
+  } catch (error) {
+    console.error(error);
+    next(error);
+  }
+};
+
 const removeUser = () => {};
 const addRole = () => {};
 const removeRole = () => {};

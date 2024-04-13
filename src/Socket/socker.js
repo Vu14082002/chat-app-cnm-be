@@ -249,5 +249,14 @@ const socketServer = (socket, io) => {
 
     socket.in(receiverId).emit('deleteFriend', { senderId });
   });
+
+  // Add user to conversation
+  socket.on('addOrUpdateConversation', ({ conversation, userIds }) => {
+    if (!conversation || !userIds?.length) return;
+
+    userIds.forEach((element) => {
+      socket.in(element).emit('addOrUpdateConversation', { conversation });
+    });
+  });
 };
 module.exports = { socketServer };
