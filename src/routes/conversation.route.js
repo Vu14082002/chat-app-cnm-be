@@ -7,6 +7,11 @@ const {
   pinConversation,
   createConversationGroup,
   getGroups,
+  deleteConversation,
+  addUser,
+  removeUser,
+  addRole,
+  removeRole,
 } = require('../controllers/conversation.controllers');
 const { upload } = require('../configs/multer.config');
 
@@ -14,6 +19,17 @@ conversationRouter
   .route('/group')
   .post(trimRequest.all, checkAuthorized, upload.single('avatar'), createConversationGroup);
 conversationRouter.route('/group').get(checkAuthorized, getGroups);
+conversationRouter.route('/group/:conversationId').delete(checkAuthorized, deleteConversation);
+conversationRouter.route('/group/:conversationId/users').post(checkAuthorized, addUser);
+conversationRouter
+  .route('/group/:conversationId/users/:userId')
+  .delete(checkAuthorized, removeUser);
+conversationRouter
+  .route('/group/:conversationId/users/:userId/role')
+  .post(checkAuthorized, addRole);
+conversationRouter
+  .route('/group/:conversationId/users/:userId/role')
+  .delete(checkAuthorized, removeRole);
 
 conversationRouter.route('/').post(trimRequest.all, checkAuthorized, openConversation);
 conversationRouter.route('/').get(trimRequest.all, checkAuthorized, getConversations);

@@ -8,6 +8,13 @@ const {
   getListUserConversations,
   pinConversationService,
   getGroupsService,
+  deleteConversationService,
+  addUsersService,
+  getConversationService,
+  removeUserService,
+  setOwnerRoleService,
+  addAdminRole,
+  removeAdminRole,
 } = require('../services/conversation.service');
 const { findUserByIdService } = require('../services/user.service');
 const { uploadToS3 } = require('../helpers/uploadToS3.helper');
@@ -99,6 +106,7 @@ const createConversationGroup = async (req, resp, next) => {
       picture,
       isGroup: true,
       users: userArray,
+      admin: userId,
     };
     const conversationSaved = await createConversation(conversationData);
     const populateConversationData = await populateConversation(
@@ -155,10 +163,96 @@ const pinConversation = async (req, resp, next) => {
 //         throw createHttpError.BadRequest('Some thing wrong, Try agian');
 //     }
 // };
+
+// TODO Kiểm tra user có quyền giải tán hay không? (Field admin)
+const deleteConversation = async (req, resp, next) => {
+  const conversationId = req.params.conversationId;
+
+  try {
+    const conversation = await deleteConversationService(conversationId);
+
+    return resp.status(StatusCodes.OK).json(conversation);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Check role: admin or owner
+const addUser = async (req, resp, next) => {
+  const conversationId = req.params.conversationId;
+  const { userIds } = req.body;
+
+  try {
+    await addUsersService({ conversationId, userIds });
+
+    const conversation = await getConversationService(conversationId);
+
+    return resp.status(StatusCodes.OK).json(conversation);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Check role: admin or owner
+const removeUser = async (req, resp, next) => {
+  const { conversationId, userId } = req.params;
+  const { blockRejoin } = req.query;
+
+  try {
+    await removeUserService({ conversationId, userId, blockRejoin });
+
+    const conversation = await getConversationService(conversationId);
+
+    return resp.status(StatusCodes.OK).json(conversation);
+  } catch (error) {
+    next(next);
+  }
+};
+
+const addRole = async (req, resp, next) => {
+  const { conversationId, userId } = req.params;
+  const { role } = req.body;
+
+  try {
+    if (role === 'owner') {
+      await setOwnerRoleService({ conversationId, userId });
+    } else if (role === 'admin') {
+      await addAdminRole({ conversationId, userId });
+    } else {
+      throw createHttpError.BadRequest('Invalid role');
+    }
+
+    const conversation = await getConversationService(conversationId);
+
+    return resp.status(StatusCodes.OK).json(conversation);
+  } catch (error) {
+    next(error);
+  }
+};
+
+const removeRole = async (req, resp, next) => {
+  const { conversationId, userId } = req.params;
+
+  try {
+    await removeAdminRole({ conversationId, userId });
+
+    const conversation = await getConversationService(conversationId);
+
+    return resp.status(StatusCodes.OK).json(conversation);
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   openConversation,
   getConversations,
   pinConversation,
   createConversationGroup,
   getGroups,
+  deleteConversation,
+  addUser,
+  removeUser,
+  addRole,
+  removeRole,
 };

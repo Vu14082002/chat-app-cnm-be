@@ -44,17 +44,9 @@ const getListUserConversations = async (userId) => {
   let conversations;
   try {
     conversations = await ConversationModel.find({
-      users: { $elemMatch: { $eq: userId } },
+      $and: [{ users: { $elemMatch: { $eq: userId } } }, { deleted: false }],
     })
       .populate('users', [
-        '-password',
-        '-qrCode',
-        '-background',
-        '-dateOfBirth',
-        '-createdAt',
-        '-updatedAt',
-      ])
-      .populate('admin', [
         '-password',
         '-qrCode',
         '-background',
@@ -102,17 +94,9 @@ const getGroupsService = async (userId) => {
   let conversations;
   try {
     conversations = await ConversationModel.find({
-      $and: [{ users: { $elemMatch: { $eq: userId } } }, { isGroup: true }],
+      $and: [{ users: { $elemMatch: { $eq: userId } } }, { isGroup: true }, { deleted: false }],
     })
       .populate('users', [
-        '-password',
-        '-qrCode',
-        '-background',
-        '-dateOfBirth',
-        '-createdAt',
-        '-updatedAt',
-      ])
-      .populate('admin', [
         '-password',
         '-qrCode',
         '-background',
@@ -156,6 +140,40 @@ const getGroupsService = async (userId) => {
   return conversations;
 };
 
+const getConversationService = async (conversationId) => {
+  try {
+    const conversation = await ConversationModel.findById(conversationId)
+      .populate('users', [
+        '-password',
+        '-qrCode',
+        '-background',
+        '-dateOfBirth',
+        '-createdAt',
+        '-updatedAt',
+      ])
+      .populate('lastMessage')
+      .populate({
+        path: 'pinnedMessages',
+        populate: {
+          path: 'sender',
+          select: 'name avatar',
+        },
+      });
+
+    if (conversation.delete === true) {
+      throw createHttpError.NotFound('Conversation not found');
+    }
+
+    return await UserModel.populate(conversation, {
+      path: 'lastMessage.sender',
+      select: 'name avatar status',
+    });
+  } catch (error) {
+    console.error(error);
+    throw httpErrors.InternalServerError(`getListUserConversations from server error${error}`);
+  }
+};
+
 const updateLastMessage = async (conversationId, message) => {
   try {
     const conversationUpdated = await ConversationModel.findByIdAndUpdate(conversationId, {
@@ -191,6 +209,92 @@ const pinConversationService = async ({ conversationId, userId }) => {
   }
 };
 
+const deleteConversationService = async (conversationId) => {
+  try {
+    const conversation = await ConversationModel.findByIdAndUpdate(conversationId, {
+      deleted: true,
+    });
+    if (!conversation) throw createHttpError.NotFound('Invalid conversation');
+
+    return conversation;
+  } catch (error) {
+    throw createHttpError.InternalServerError('Failed to delete conversation', error);
+  }
+};
+
+const addUsersService = async ({ conversationId, userIds }) => {
+  try {
+    const conversation = await ConversationModel.findByIdAndUpdate(conversationId, {
+      $addToSet: { users: userIds },
+    });
+    if (!conversation) throw createHttpError.NotFound('Invalid conversation');
+
+    return conversation;
+  } catch (error) {
+    throw createHttpError.InternalServerError('Failed to add users to conversation', error);
+  }
+};
+
+const removeUserService = async ({ conversationId, userId, blockRejoin }) => {
+  try {
+    const updated = {
+      $pull: { users: userId },
+    };
+
+    if (blockRejoin === 'true') updated.$addToSet = { bannedMembers: userId };
+
+    const conversation = await ConversationModel.findByIdAndUpdate(conversationId, updated);
+    if (!conversation) throw createHttpError.NotFound('Invalid conversation');
+
+    return conversation;
+  } catch (error) {
+    throw createHttpError.InternalServerError('Failed to remove user from conversation', error);
+  }
+};
+
+const setOwnerRoleService = async ({ conversationId, userId }) => {
+  try {
+    const conversation = await ConversationModel.findByIdAndUpdate(conversationId, {
+      $set: {
+        admin: userId,
+      },
+    });
+    if (!conversation) throw createHttpError.NotFound('Invalid conversation');
+
+    return conversation;
+  } catch (error) {
+    throw createHttpError.InternalServerError('Failed to set owner role', error);
+  }
+};
+
+const addAdminRole = async ({ conversationId, userId }) => {
+  try {
+    const conversation = await ConversationModel.findByIdAndUpdate(conversationId, {
+      $addToSet: { deputy: userId },
+    });
+
+    if (!conversation) throw createHttpError.NotFound('Invalid conversation');
+
+    return conversation;
+  } catch (error) {
+    throw createHttpError.InternalServerError('Failed to add admin role', error);
+  }
+};
+
+const removeAdminRole = async ({ conversationId, userId }) => {
+  try {
+    const conversation = await ConversationModel.findByIdAndUpdate(conversationId, {
+      $pull: { deputy: userId },
+    });
+
+    if (!conversation) throw createHttpError.NotFound('Invalid conversation');
+
+    return conversation;
+  } catch (error) {
+    throw createHttpError.InternalServerError('Failed to remove admin role', error);
+  }
+};
+
 module.exports = {
   checkExistConversation,
   createConversation,
@@ -199,4 +303,11 @@ module.exports = {
   updateLastMessage,
   pinConversationService,
   getGroupsService,
+  deleteConversationService,
+  addUsersService,
+  getConversationService,
+  removeUserService,
+  setOwnerRoleService,
+  addAdminRole,
+  removeAdminRole,
 };
