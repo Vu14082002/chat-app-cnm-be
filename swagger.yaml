@@ -12,6 +12,7 @@ tags:
   - name: authentication
   - name: user
   - name: conversation
+  - name: message
 paths:
   /auth/createOTP:
     post:
@@ -176,6 +177,8 @@ paths:
           description: Internal server error
   /auth/logout:
     post:
+      security:
+        - BearerAuth: []
       tags:
         - 'authentication'
       summary: Logout user
@@ -187,6 +190,8 @@ paths:
           description: Internal server error
   /auth/refreshToken:
     post:
+      security:
+        - BearerAuth: []
       tags:
         - 'authentication'
       summary: refreshTokens
@@ -207,6 +212,8 @@ paths:
           description: Internal server error
   /auth/forgot-password:
     post:
+      security:
+        - BearerAuth: []
       tags:
         - 'authentication'
       summary: Change user password
@@ -236,6 +243,8 @@ paths:
           description: Internal server error
   /auth/changePassword:
     post:
+      security:
+        - BearerAuth: []
       tags:
         - 'authentication'
       summary: Change user password
@@ -262,6 +271,8 @@ paths:
           description: Internal server error
   /user/:
     get:
+      security:
+        - BearerAuth: []
       tags:
         - user
       summary: 'Find user by phone'
@@ -280,6 +291,8 @@ paths:
           description: 'Internal Server Error'
 
     patch:
+      security:
+        - BearerAuth: []
       tags:
         - user
       summary: 'Update user information'
@@ -308,6 +321,8 @@ paths:
 
   /user/info:
     get:
+      security:
+        - BearerAuth: []
       tags:
         - user
       summary: 'Get user information'
@@ -321,6 +336,8 @@ paths:
 
   /user/listFriend:
     get:
+      security:
+        - BearerAuth: []
       tags:
         - user
       summary: 'Get list of friends'
@@ -334,6 +351,8 @@ paths:
 
   /user/addfriend:
     post:
+      security:
+        - BearerAuth: []
       tags:
         - user
       summary: 'Send friend request'
@@ -362,6 +381,8 @@ paths:
 
   /user/listRequestFriend:
     get:
+      security:
+        - BearerAuth: []
       tags:
         - user
       summary: 'Get list of friend requests sent'
@@ -375,6 +396,8 @@ paths:
 
   /user/listRequestfriendWaitRespone:
     get:
+      security:
+        - BearerAuth: []
       tags:
         - user
       summary: 'Get list of friend requests waiting for response'
@@ -388,6 +411,8 @@ paths:
 
   /user/acceptfriend:
     post:
+      security:
+        - BearerAuth: []
       tags:
         - user
       summary: 'Accept friend request'
@@ -412,6 +437,8 @@ paths:
 
   /user/rejectfriend:
     post:
+      security:
+        - BearerAuth: []
       tags:
         - user
       summary: 'Reject friend request'
@@ -436,6 +463,8 @@ paths:
 
   /user/revocationRequestFriend:
     post:
+      security:
+        - BearerAuth: []
       tags:
         - user
       summary: 'Revoke friend request'
@@ -458,6 +487,8 @@ paths:
 
   /user/deletefriend:
     delete:
+      security:
+        - BearerAuth: []
       tags:
         - user
       summary: 'Delete friend'
@@ -480,6 +511,8 @@ paths:
 
   /user/updateAvatar:
     post:
+      security:
+        - BearerAuth: []
       tags:
         - user
       summary: 'Update user avatar'
@@ -499,6 +532,8 @@ paths:
           description: 'Internal Server Error'
   /conversation/:
     post:
+      security:
+        - BearerAuth: []
       tags:
         - conversation
       summary: 'Open conversation'
@@ -522,6 +557,8 @@ paths:
           description: 'Internal Server Error'
 
     get:
+      security:
+        - BearerAuth: []
       tags:
         - conversation
       summary: 'Get user conversations'
@@ -535,6 +572,8 @@ paths:
 
   /conversation/group:
     post:
+      security:
+        - BearerAuth: []
       tags:
         - conversation
       summary: 'Create conversation group'
@@ -564,6 +603,8 @@ paths:
           description: 'Internal Server Error'
 
     get:
+      security:
+        - BearerAuth: []
       tags:
         - conversation
       summary: 'Get groups'
@@ -577,6 +618,8 @@ paths:
 
   /conversation/group/{conversationId}:
     delete:
+      security:
+        - BearerAuth: []
       tags:
         - conversation
       summary: 'Delete conversation'
@@ -595,6 +638,8 @@ paths:
 
   /conversation/group/{conversationId}/users:
     post:
+      security:
+        - BearerAuth: []
       tags:
         - conversation
       summary: 'Add user to group conversation'
@@ -623,6 +668,8 @@ paths:
 
   /conversation/group/{conversationId}/users/{userId}:
     delete:
+      security:
+        - BearerAuth: []
       tags:
         - conversation
       summary: 'Remove user from group conversation'
@@ -645,6 +692,8 @@ paths:
 
   /conversation/group/{conversationId}/users/{userId}/role:
     post:
+      security:
+        - BearerAuth: []
       tags:
         - conversation
       summary: 'Add role to user in group conversation'
@@ -677,6 +726,8 @@ paths:
           description: 'Internal Server Error'
 
     delete:
+      security:
+        - BearerAuth: []
       tags:
         - conversation
       summary: 'Remove role from user in group conversation'
@@ -699,6 +750,8 @@ paths:
 
   /conversation/pin/{conversationId}:
     get:
+      security:
+        - BearerAuth: []
       tags:
         - conversation
       summary: 'Pin conversation'
@@ -714,3 +767,230 @@ paths:
           description: 'Unauthorized'
         500:
           description: 'Internal Server Error'
+  /message:
+    post:
+      summary: 'Send message'
+      tags:
+        - message
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            properties:
+              messages:
+                type: array
+                items:
+                  type: object
+              conversationId:
+                type: string
+              reply:
+                type: object
+              sticker:
+                type: object
+              location:
+                type: object
+      responses:
+        200:
+          description: 'Message sent successfully'
+        400:
+          description: 'Bad Request'
+        401:
+          description: 'Unauthorized'
+        500:
+          description: 'Internal Server Error'
+
+    get:
+      summary: 'Get messages of a conversation'
+      tags:
+        - message
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: query
+          name: messageId
+          type: string
+        - in: path
+          name: conversationId
+          type: string
+      responses:
+        200:
+          description: 'Successfully retrieved messages'
+        401:
+          description: 'Unauthorized'
+        500:
+          description: 'Internal Server Error'
+
+  /message/reply/{replyId}:
+    get:
+      summary: 'Get reply messages'
+      tags:
+        - message
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: replyId
+          type: string
+      responses:
+        200:
+          description: 'Successfully retrieved reply messages'
+        401:
+          description: 'Unauthorized'
+        500:
+          description: 'Internal Server Error'
+
+  /message/deleteForMe:
+    post:
+      summary: 'Delete message for me'
+      tags:
+        - message
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            properties:
+              messageId:
+                type: string
+      responses:
+        200:
+          description: 'Message deleted successfully'
+        401:
+          description: 'Unauthorized'
+        500:
+          description: 'Internal Server Error'
+
+  /message/deleteForAll:
+    post:
+      summary: 'Delete message for all'
+      tags:
+        - message
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            properties:
+              messageId:
+                type: string
+      responses:
+        200:
+          description: 'Message deleted for all successfully'
+        401:
+          description: 'Unauthorized'
+        500:
+          description: 'Internal Server Error'
+
+  /message/pin/{messageId}:
+    post:
+      summary: 'Pin message'
+      tags:
+        - message
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: messageId
+          type: string
+      responses:
+        200:
+          description: 'Message pinned successfully'
+        404:
+          description: 'Message not found'
+        401:
+          description: 'Unauthorized'
+        500:
+          description: 'Internal Server Error'
+
+  /message/unpinMessage/{messageId}:
+    post:
+      summary: 'Unpin message'
+      tags:
+        - message
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: messageId
+          type: string
+      responses:
+        200:
+          description: 'Message unpinned successfully'
+        401:
+          description: 'Unauthorized'
+        500:
+          description: 'Internal Server Error'
+
+  /message/react:
+    post:
+      summary: 'React to a message'
+      tags:
+        - message
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            properties:
+              react:
+                type: object
+              messageId:
+                type: string
+      responses:
+        200:
+          description: 'Reaction added successfully'
+        401:
+          description: 'Unauthorized'
+        500:
+          description: 'Internal Server Error'
+
+  /message/forward:
+    post:
+      summary: 'Forward a message'
+      tags:
+        - message
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            properties:
+              messageId:
+                type: string
+              conversationIds:
+                type: array
+                items:
+                  type: string
+      responses:
+        200:
+          description: 'Message forwarded successfully'
+        401:
+          description: 'Unauthorized'
+        500:
+          description: 'Internal Server Error'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      in: header
+      name: authorization
+      description: 'Bearer JWT token for authentication'
+      scheme: bearer
+      bearerFormat: JWT
