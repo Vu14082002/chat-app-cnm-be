@@ -227,21 +227,22 @@ const addUser = async (req, resp, next) => {
   }
 };
 
-// TODO Check role: admin or owner
+// FIXME Check role: admin or owner
 const removeUser = async (req, resp, next) => {
+  console.log('vao day');
   try {
     const { conversationId, userId: removeUser } = req.params;
     const { userId } = req.user;
     const { blockRejoin } = req.query;
     // await removeUserService({ userId, conversationId, removeUser, blockRejoin });
     // const conversation = await getConversationService(conversationId);
-    const conversation = await removeUserService({
+    await removeUserService({
       userId,
       conversationId,
       removeUser,
       blockRejoin,
     });
-
+    const conversation = await getConversationService(conversationId);
     return resp.status(StatusCodes.OK).json(conversation);
   } catch (error) {
     next(next);
