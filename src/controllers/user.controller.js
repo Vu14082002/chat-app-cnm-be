@@ -143,9 +143,11 @@ const rejectfriend = async (req, resp, next) => {
 const deleteFriend = async (req, resp, next) => {
   try {
     const userId = req.user.userId;
-    const { friendId } = req.body;
+    const { userId: friendId } = req.params;
     const result = await deleteFriendById(userId, friendId);
-    resp.status(StatusCodes.OK).json(result);
+
+    const statusCode = result.success ? StatusCodes.OK : StatusCodes.BAD_REQUEST;
+    resp.status(statusCode).json(result);
   } catch (error) {
     next(error);
   }

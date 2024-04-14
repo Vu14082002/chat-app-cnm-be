@@ -41,7 +41,7 @@ userRouter.route('/rejectfriend').post(trimRequest.all, checkAuthorized, rejectf
 userRouter
   .route('/revocationRequestFriend')
   .post(trimRequest.all, checkAuthorized, revocationRequestFriend);
-userRouter.route('/deletefriend').delete(trimRequest.all, checkAuthorized, deleteFriend);
+userRouter.route('/deletefriend/:userId').delete(trimRequest.all, checkAuthorized, deleteFriend);
 userRouter.route('/updateAvatar').post(checkAuthorized, upload.single('avatar'), updateAvatar);
 userRouter.route('/').patch(checkAuthorized, trimRequest.all, updateUserInfo);
 

@@ -207,7 +207,7 @@ const rejectFriendRequestService = async (userId, friendId) => {};
 
 const deleteFriendById = async (userId, friendId) => {
   try {
-    const user = await UserModel.findOneAndUpdate(
+    const user = await FriendshipModel.findOneAndUpdate(
       { _id: userId, friends: friendId },
       { $pull: { friends: friendId } },
       { new: true }
