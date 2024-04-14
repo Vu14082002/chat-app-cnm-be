@@ -29,12 +29,28 @@ const findUserByContactOrNameRegex = async (keyword, userId) => {
     // Lấy danh sách bạn bè của người dùng hiện tại
     const user = await FriendshipModel.findById(userId);
     const userFriendIds = new Set(user?.friends.map((friend) => friend.toString()) || []);
+    const sendRequestAddFriend = await FriendRequestModel.findOne({ sender_id: userId });
+    const waitResponseAddFriend = await FriendRequestModel.findOne({ receiver_id: userId });
 
     // Thêm thuộc tính isFriend vào từng user trong danh sách tìm được
-    const usersWithFriendStatus = userFind.map((user) => ({
-      ...user.toObject(),
-      isFriend: userFriendIds.has(user._id),
-    }));
+    // const usersWithFriendStatus = userFind.map((user) => ({
+    //   ...user.toObject(),
+    //   isFriend: userFriendIds.has(user._id),
+    // }));
+    const usersWithFriendStatus = userFind.map((user) => {
+      // status: 0: không phải là bạn bè, 1: đã là bạn bè, 2: đã gửi yêu cầu kết bạn, 3: được gửi yêu cầu kết bạn
+      let status = 0;
+      if (userFriendIds.has(user._id)) {
+        status = 1;
+      } else if (sendRequestAddFriend) {
+        status = 2;
+      } else if (waitResponseAddFriend) {
+        status = 3;
+      } else {
+        status = 0;
+      }
+      return { ...user.toObject(), status };
+    });
     return usersWithFriendStatus;
   } catch (error) {
     throw httpErrors.BadRequest('Something went wrong. Please try again later.');
