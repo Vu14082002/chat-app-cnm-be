@@ -89,7 +89,7 @@ const getListUserConversations = async (userId) => {
   }
   return conversations;
 };
-
+// get conversation group where user is member
 const getGroupsService = async (userId) => {
   let conversations;
   try {
@@ -209,15 +209,26 @@ const pinConversationService = async ({ conversationId, userId }) => {
   }
 };
 
-const deleteConversationService = async (conversationId) => {
+const deleteConversationService = async (conversationId, userId) => {
   try {
-    const conversation = await ConversationModel.findByIdAndUpdate(conversationId, {
-      deleted: true,
-    });
+    const conversation = await ConversationModel.findById(conversationId);
     if (!conversation) throw createHttpError.NotFound('Invalid conversation');
-
+    const admin = conversation.admin;
+    if (userId !== admin)
+      throw createHttpError.Forbidden('You are not allowed to delete this conversation');
+    conversation.deleted = true;
+    await conversation.save();
+    // const conversation = await ConversationModel.findByIdAndUpdate(conversationId, {
+    //   deleted: true,
+    // });
     return conversation;
   } catch (error) {
+    if (error instanceof createHttpError.NotFound) {
+      throw error;
+    }
+    if (error instanceof createHttpError.Forbidden) {
+      throw error;
+    }
     throw createHttpError.InternalServerError('Failed to delete conversation', error);
   }
 };

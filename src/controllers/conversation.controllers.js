@@ -52,7 +52,7 @@ const openConversation = async (req, resp, next) => {
   }
 };
 
-// TODO check friend
+// FIXME check friend
 const createConversationGroup = async (req, resp, next) => {
   try {
     const userId = req.user.userId;
@@ -126,13 +126,10 @@ const createConversationGroup = async (req, resp, next) => {
   }
 };
 
-// TODO get groups chưa bị ban
 const getGroups = async (req, resp, next) => {
-  const userId = req.user.userId;
-
   try {
+    const userId = req.user.userId;
     const conversations = await getGroupsService(userId);
-
     return resp.status(StatusCodes.OK).json(conversations);
   } catch (error) {
     next(error);
@@ -204,11 +201,10 @@ const pinConversation = async (req, resp, next) => {
 
 // TODO Kiểm tra user có quyền giải tán hay không? (Field admin)
 const deleteConversation = async (req, resp, next) => {
-  const conversationId = req.params.conversationId;
-
   try {
-    const conversation = await deleteConversationService(conversationId);
-
+    const conversationId = req.params.conversationId;
+    const userId = req.user.userId;
+    const conversation = await deleteConversationService(conversationId, userId);
     return resp.status(StatusCodes.OK).json(conversation);
   } catch (error) {
     next(error);
