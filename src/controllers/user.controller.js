@@ -14,6 +14,7 @@ const {
   getListFriendService,
   listRequestfriendWaitResponeService,
   rejectriendRequestService,
+  getListRecommendFriendService,
 } = require('../services/user.service');
 const { StatusCodes } = require('http-status-codes');
 const uuid = require('uuid');
@@ -173,6 +174,17 @@ const getListFriend = async (req, resp, next) => {
     next(error);
   }
 };
+// rocommendedfriends
+// FIXME: This function is not working as expected. The function is not returning the recommended friends.
+const recommendedfriends = async (req, resp, next) => {
+  try {
+    const userId = req.user.userId;
+    const listFriend = await getListRecommendFriendService(userId);
+    return resp.status(StatusCodes.OK).json(listFriend);
+  } catch (error) {
+    next(error);
+  }
+};
 
 module.exports = {
   findUserByPhone,
@@ -187,4 +199,5 @@ module.exports = {
   listRequestfriendWaitRespone,
   revocationRequestFriend,
   getListFriend,
+  recommendedfriends,
 };

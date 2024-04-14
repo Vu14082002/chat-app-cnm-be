@@ -72,7 +72,7 @@ const sendMessage = async (req, resp, next) => {
     }
 
     let checkValidMessage = true;
-    // TODO: tắt  check chat message
+    // FIXME: tắt  check chat message
     // if (messages?.length > 0) {
     //   for (const message of messages) {
     //     if (message.type === 'text') {
@@ -146,7 +146,7 @@ const getReplyMessages = async (req = request, resp = response, next) => {
     next(error);
   }
 };
-// TODO: Tự hiểu
+// FIXME: Tự hiểu
 // const deleteMessageForMe = async (req, resp, next) => {
 //   try {
 //     const messageId = req.body.messageId;

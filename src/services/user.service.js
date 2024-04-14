@@ -11,7 +11,6 @@ const { CommandFailedEvent } = require('mongodb');
 // find user by id
 const findUserByIdService = async (id) => {
   const userFind = await UserModel.findById(id);
-  console.log('------------------------');
   console.log(userFind);
   return userFind;
 };
@@ -26,11 +25,22 @@ const findUserByContactOrNameRegex = async (keyword, userId) => {
         { _id: { $ne: userId } },
       ],
     }).select('name avatar');
-    return userFind;
+
+    // Lấy danh sách bạn bè của người dùng hiện tại
+    const user = await FriendshipModel.findById(userId);
+    const userFriendIds = new Set(user.friends.map((friend) => friend.toString()));
+
+    // Thêm thuộc tính isFriend vào từng user trong danh sách tìm được
+    const usersWithFriendStatus = userFind.map((user) => ({
+      ...user.toObject(),
+      isFriend: userFriendIds.has(user._id),
+    }));
+    return usersWithFriendStatus;
   } catch (error) {
-    throw httpErrors.BadRequest('Some thing wrong, Please try again late');
+    throw httpErrors.BadRequest('Something went wrong. Please try again later.');
   }
 };
+
 const findUserById = async (userId) => {
   const user = await UserModel.findOne({ _id: userId }).select(
     '_id name phone dateOfBirth gender avatar background'
@@ -247,6 +257,16 @@ const getListFriendService = async (userId) => {
     throw httpErrors.InternalServerError(`revocationRequestFriendService request error`, error);
   }
 };
+const getListRecommendFriendService = async (userId) => {
+  try {
+    // get list friend user
+    const listFriend = await FriendshipModel.findById(userId).select('friends');
+    return listFriend;
+  } catch (error) {
+    console.error(error);
+    next(error);
+  }
+};
 
 module.exports = {
   findUserByIdService,
@@ -263,4 +283,5 @@ module.exports = {
   revocationRequestFriendService,
   getListFriendService,
   listRequestfriendWaitResponeService,
+  getListRecommendFriendService,
 };

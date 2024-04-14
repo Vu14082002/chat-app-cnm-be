@@ -12,6 +12,7 @@ const {
   getListFriend,
   listRequestfriendWaitRespone,
   rejectfriend,
+  recommendedfriends,
 } = require('../controllers/user.controller');
 const trimRequest = require('trim-request');
 const { checkAuthorized } = require('../middlewares/auth.middleware');
@@ -25,6 +26,9 @@ userRouter.route('/').get(trimRequest.all, checkAuthorized, findUserByPhone);
 userRouter.route('/info').get(trimRequest.all, checkAuthorized, userInfo);
 userRouter.route('/listFriend').get(trimRequest.all, checkAuthorized, getListFriend);
 userRouter.route('/addfriend').post(trimRequest.all, checkAuthorized, addfriend);
+userRouter
+  .route('/addfriend/recommendedfriends')
+  .get(trimRequest.all, checkAuthorized, recommendedfriends);
 // Bạn là A: đay là API lấy danh sách các yêu cầu kể bạn mà A đã gửi
 userRouter.route('/listRequestFriend').get(trimRequest.all, checkAuthorized, listRequestfriend);
 // Bạn là A: đay là API lấy danh sách các yêu cầu kết bạn mà A đã được nhận
