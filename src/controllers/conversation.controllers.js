@@ -56,7 +56,8 @@ const openConversation = async (req, resp, next) => {
 const createConversationGroup = async (req, resp, next) => {
   try {
     const userId = req.user.userId;
-    const { avatar, name, users } = req.body;
+    const { avatar, name, users: u } = req.body;
+    const users = Array.isArray(u) ? u : JSON.parse(u);
     const checkFriend = await isFriendsService(users, userId);
     if (!checkFriend) {
       return resp

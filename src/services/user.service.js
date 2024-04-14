@@ -28,7 +28,7 @@ const findUserByContactOrNameRegex = async (keyword, userId) => {
 
     // Lấy danh sách bạn bè của người dùng hiện tại
     const user = await FriendshipModel.findById(userId);
-    const userFriendIds = new Set(user.friends.map((friend) => friend.toString()));
+    const userFriendIds = new Set(user?.friends.map((friend) => friend.toString()) || []);
 
     // Thêm thuộc tính isFriend vào từng user trong danh sách tìm được
     const usersWithFriendStatus = userFind.map((user) => ({
