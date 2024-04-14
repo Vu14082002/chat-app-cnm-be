@@ -17,7 +17,7 @@ const {
   addAdminRole,
   removeAdminRole,
 } = require('../services/conversation.service');
-const { findUserByIdService } = require('../services/user.service');
+const { findUserByIdService, isFriendsService } = require('../services/user.service');
 const { uploadToS3 } = require('../helpers/uploadToS3.helper');
 
 const openConversation = async (req, resp, next) => {
@@ -54,13 +54,18 @@ const openConversation = async (req, resp, next) => {
 
 // TODO check friend
 const createConversationGroup = async (req, resp, next) => {
-  const userId = req.user.userId;
-  const { avatar, name, users } = req.body;
-  const avatarFile = req.file;
-
-  let picture = avatar;
-
   try {
+    const userId = req.user.userId;
+    const { avatar, name, users } = req.body;
+    const checkFriend = await isFriendsService(users, userId);
+    if (!checkFriend) {
+      return resp
+        .status(StatusCodes.BAD_REQUEST)
+        .json({ message: 'You are not friend with all user in group' });
+    }
+    const avatarFile = req.file;
+
+    let picture = avatar;
     if (!users) {
       logger.error('Please Provide user to begin conversation');
       throw createHttpError.BadGateway('Please Provide name and userIds to begin conversation');

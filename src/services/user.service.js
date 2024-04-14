@@ -268,6 +268,20 @@ const getListRecommendFriendService = async (userId) => {
   }
 };
 
+// find friend by userId
+const isFriendsService = async (friends, userId) => {
+  try {
+    const friendObj = await FriendshipModel.findById(userId);
+    const friend = new Set(friendObj.friends.map((friend) => friend.toString()));
+    for (let i = 0; i < friends.length; i++) {
+      if (!friend.has(friends[i])) return false;
+    }
+    return true;
+  } catch (error) {
+    throw httpErrors.InternalServerError(`isFriendsService request error`, error);
+  }
+};
+
 module.exports = {
   findUserByIdService,
   findUserByContactOrNameRegex,
@@ -284,4 +298,5 @@ module.exports = {
   getListFriendService,
   listRequestfriendWaitResponeService,
   getListRecommendFriendService,
+  isFriendsService,
 };
