@@ -230,7 +230,7 @@ const addUser = async (req, resp, next) => {
 // TODO Check role: admin or owner
 const removeUser = async (req, resp, next) => {
   try {
-    const { conversationId, removeUser } = req.params;
+    const { conversationId, userId: removeUser } = req.params;
     const { userId } = req.user;
     const { blockRejoin } = req.query;
     // await removeUserService({ userId, conversationId, removeUser, blockRejoin });
