@@ -16,7 +16,8 @@ const ConversationSchema = mongoose.Schema(
     },
     picture: {
       type: String,
-      require: true,
+      require: false,
+      default: '',
     },
     users: {
       type: [
@@ -32,8 +33,8 @@ const ConversationSchema = mongoose.Schema(
       ref: 'UserModel',
     },
     deputy: {
-      type: String,
-      ref: 'UserModel',
+      type: [{ type: String, ref: 'UserModel' }],
+      default: [],
     },
     bannedMembers: {
       type: [
@@ -76,6 +77,10 @@ const ConversationSchema = mongoose.Schema(
         },
       ],
       default: [],
+    },
+    deleted: {
+      type: Boolean,
+      default: false,
     },
   },
 

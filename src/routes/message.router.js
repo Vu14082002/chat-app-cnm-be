@@ -27,8 +27,6 @@ messageRouter.route('/pin/:messageId').post(trimRequest.all, checkAuthorized, pi
 messageRouter
   .route('/unpinMessage/:messageId')
   .post(trimRequest.all, checkAuthorized, unPinMessage);
-// TODO: DELETE pin
-// add react
 messageRouter.route('/react').post(trimRequest.all, checkAuthorized, reactForMessage);
 messageRouter.route('/forward').post(trimRequest.all, checkAuthorized, forwardMessage);
 

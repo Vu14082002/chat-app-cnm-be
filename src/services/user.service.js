@@ -21,10 +21,7 @@ const findUserByContactOrNameRegex = async (keyword, userId) => {
     const userFind = await UserModel.find({
       $and: [
         {
-          $or: [
-            { _id: { $regex: keyword, $options: 'i' } },
-            { name: { $regex: keyword, $options: 'i' } },
-          ],
+          $or: [{ _id: { $eq: keyword } }, { name: { $regex: keyword, $options: 'i' } }],
         },
         { _id: { $ne: userId } },
       ],
@@ -54,7 +51,7 @@ const updateAvatarURL = async (userId, avatarUrl) => {
   }
 };
 
-const sendFriendRequestService = async (senderId, receiverId) => {
+const sendFriendRequestService = async ({ senderId, receiverId, message, blockView }) => {
   try {
     const existingFriendship = await FriendshipModel.exists({
       _id: senderId,
@@ -71,12 +68,21 @@ const sendFriendRequestService = async (senderId, receiverId) => {
     if (existingRequest) {
       return { status: false, message: 'Bạn đã gửi yêu cầu kết bạn rồi, hãy đợi phản hồi' };
     }
-    await FriendRequestModel.create({
+    const res = await FriendRequestModel.create({
       sender_id: senderId,
       receiver_id: receiverId,
+      message,
+      blockView,
     });
+
+    const data = await FriendRequestModel.findOne({ _id: res._id }).populate({
+      path: 'receiver_id',
+      select: 'name avatar',
+      model: 'UserModel',
+    });
+
     await sendNotification(receiverId, senderId, 'Bạn có một yêu cầu kết bạn');
-    return { status: true, message: `Đã gửi yêu cầu kết bạn đến ${receiverId}` };
+    return { status: true, message: `Đã gửi yêu cầu kết bạn đến ${receiverId}`, data };
   } catch (error) {
     throw httpErrors.InternalServerError(`Send FriendRequestService from server error ${error}`);
   }
@@ -85,11 +91,13 @@ const sendFriendRequestService = async (senderId, receiverId) => {
 // Bạn là A: lấy danh sach các yêu cầu kết bạn mà bạn đã gửi
 const listRequestFriendService = async (userId) => {
   try {
-    const listRequestFriend = await FriendRequestModel.find({ sender_id: userId }).populate({
-      path: 'receiver_id',
-      select: 'name avatar',
-      model: 'UserModel',
-    });
+    const listRequestFriend = await FriendRequestModel.find({ sender_id: userId })
+      .sort({ createdAt: -1 })
+      .populate({
+        path: 'receiver_id',
+        select: 'name avatar',
+        model: 'UserModel',
+      });
     return listRequestFriend;
   } catch (error) {
     console.error(error);
@@ -99,11 +107,13 @@ const listRequestFriendService = async (userId) => {
 // Bạn là A: lấy danh sach các yêu cầu kết bạn mà bạn đã được nhận
 const listRequestfriendWaitResponeService = async (userId) => {
   try {
-    const listRequestFriend = await FriendRequestModel.find({ receiver_id: userId }).populate({
-      path: 'sender_id',
-      select: 'name avatar',
-      model: 'UserModel',
-    });
+    const listRequestFriend = await FriendRequestModel.find({ receiver_id: userId })
+      .sort({ createdAt: -1 })
+      .populate({
+        path: 'sender_id',
+        select: 'name avatar',
+        model: 'UserModel',
+      });
     return listRequestFriend;
   } catch (error) {
     console.error(error);

@@ -36,8 +36,19 @@ app.use(compression());
 // chio co duong dan nay moi dc ket noi toi server con lai thi ko dc connect
 // them cho biet' vay thoi, du an nay ko can ::) do~ phien'
 // app.use(cors({ origin: 'http://localhost:3000' }));
-app.use(cors());
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+app.use(
+  cors({
+    allowedHeaders: '*',
+  })
+);
+app.use(
+  '/api-docs',
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerDocument, {
+    explorer: true,
+    customCssUrl: 'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.10.5/swagger-ui.min.css',
+  })
+);
 app.use('/api/v1', routes);
 
 // Error
