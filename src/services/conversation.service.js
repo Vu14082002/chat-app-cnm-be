@@ -2,7 +2,6 @@ const createHttpError = require('http-errors');
 const { ConversationModel } = require('../models/conversation.model');
 const { UserModel } = require('../models/user.model');
 const httpErrors = require('http-errors');
-const { cli } = require('winston/lib/winston/config');
 
 const checkExistConversation = async (senderUserId, receiverUserId) => {
   let conversationList = await ConversationModel.findOne({
@@ -18,8 +17,6 @@ const checkExistConversation = async (senderUserId, receiverUserId) => {
     path: 'lastMessage.sender',
     select: 'name avatar status',
   });
-  console.log('--------------Not comming--------------------');
-  console.log(conversationList);
   // return conversationList[0];
   return conversationList;
 };
