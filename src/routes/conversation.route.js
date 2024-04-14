@@ -5,10 +5,12 @@ const {
   openConversation,
   getConversations,
   pinConversation,
+  createGroup,
 } = require('../controllers/conversation.controllers');
 
 conversationRouter.route('/').post(trimRequest.all, checkAuthorized, openConversation);
 conversationRouter.route('/').get(trimRequest.all, checkAuthorized, getConversations);
+conversationRouter.route('/group').post(trimRequest.all, checkAuthorized, createGroup);
 conversationRouter
   .route('/pin/:conversationId')
   .get(trimRequest.all, checkAuthorized, pinConversation);

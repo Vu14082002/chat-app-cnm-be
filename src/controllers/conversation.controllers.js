@@ -1,5 +1,6 @@
 const logger = require('../logger');
 const { StatusCodes } = require('http-status-codes');
+require('dotenv').config();
 const createHttpError = require('http-errors');
 const {
   checkExistConversation,
@@ -52,6 +53,37 @@ const getConversations = async (req, resp, next) => {
     next(error);
   }
 };
+const createGroup = async (req, resp, next) => {
+  try {
+    const userId = req.user.userId;
+    const { users, name } = req.body;
+    // add current user to group
+    users.push(userId);
+    // check group must have name and at least 3 users
+    if (!name || users.length < 3) {
+      return resp
+        .status(StatusCodes.BAD_REQUEST)
+        .json({ message: 'Group must have name and at least 3 users' });
+    }
+    let conversationData = {
+      name,
+      isGroup: true,
+      users,
+      admin: userId,
+      picture: process.env.DEFAULT_GROUP_AVATAR,
+    };
+    // create group
+    const conversationSaved = await createConversation(conversationData);
+    const populateConversationData = await populateConversation(
+      conversationSaved._id,
+      'users admin',
+      '-password'
+    );
+    return resp.status(StatusCodes.CREATED).json(populateConversationData);
+  } catch (error) {
+    next(error);
+  }
+};
 
 const pinConversation = async (req, resp, next) => {
   try {
@@ -73,4 +105,4 @@ const pinConversation = async (req, resp, next) => {
 //         throw createHttpError.BadRequest('Some thing wrong, Try agian');
 //     }
 // };
-module.exports = { openConversation, getConversations, pinConversation };
+module.exports = { openConversation, getConversations, pinConversation, createGroup };
