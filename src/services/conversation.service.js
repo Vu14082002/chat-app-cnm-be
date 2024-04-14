@@ -242,23 +242,37 @@ const addUsersService = async ({ conversationId, userIds }) => {
 
     return conversation;
   } catch (error) {
+    if (error instanceof createHttpError.NotFound) {
+      throw error;
+    }
     throw createHttpError.InternalServerError('Failed to add users to conversation', error);
   }
 };
 
-const removeUserService = async ({ conversationId, userId, blockRejoin }) => {
+const removeUserService = async ({ userId, conversationId, removeUser, blockRejoin }) => {
   try {
-    const updated = {
-      $pull: { users: userId },
-    };
-
-    if (blockRejoin === 'true') updated.$addToSet = { bannedMembers: userId };
-
-    const conversation = await ConversationModel.findByIdAndUpdate(conversationId, updated);
+    const conversation = await ConversationModel.findById(conversationId);
     if (!conversation) throw createHttpError.NotFound('Invalid conversation');
-
+    if (conversation.admin !== userId && !conversation.deputy.includes(userId))
+      throw createHttpError.Forbidden(
+        `You are not allowed to remove user ${removeUser} from this conversation`
+      );
+    if (conversation.admin === removeUser) {
+      throw createHttpError.Forbidden('You cannot remove the owner of the conversation');
+    }
+    conversation.users.pull(removeUser);
+    if (blockRejoin === 'true') {
+      conversation.blockRejoin.push(removeUser);
+    }
+    await conversation.save();
     return conversation;
   } catch (error) {
+    if (error instanceof createHttpError.NotFound) {
+      throw error;
+    }
+    if (error instanceof createHttpError.Forbidden) {
+      throw error;
+    }
     throw createHttpError.InternalServerError('Failed to remove user from conversation', error);
   }
 };
@@ -274,6 +288,9 @@ const setOwnerRoleService = async ({ conversationId, userId }) => {
 
     return conversation;
   } catch (error) {
+    if (error instanceof createHttpError.NotFound) {
+      throw error;
+    }
     throw createHttpError.InternalServerError('Failed to set owner role', error);
   }
 };

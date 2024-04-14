@@ -199,7 +199,7 @@ const pinConversation = async (req, resp, next) => {
 //     }
 // };
 
-// TODO Kiểm tra user có quyền giải tán hay không? (Field admin)
+// FIXME Kiểm tra user có quyền giải tán hay không? (Field admin)
 const deleteConversation = async (req, resp, next) => {
   try {
     const conversationId = req.params.conversationId;
@@ -216,7 +216,6 @@ const deleteConversation = async (req, resp, next) => {
 const addUser = async (req, resp, next) => {
   const conversationId = req.params.conversationId;
   const { userIds } = req.body;
-
   try {
     await addUsersService({ conversationId, userIds });
 
@@ -230,13 +229,18 @@ const addUser = async (req, resp, next) => {
 
 // TODO Check role: admin or owner
 const removeUser = async (req, resp, next) => {
-  const { conversationId, userId } = req.params;
-  const { blockRejoin } = req.query;
-
   try {
-    await removeUserService({ conversationId, userId, blockRejoin });
-
-    const conversation = await getConversationService(conversationId);
+    const { conversationId, removeUser } = req.params;
+    const { userId } = req.user;
+    const { blockRejoin } = req.query;
+    // await removeUserService({ userId, conversationId, removeUser, blockRejoin });
+    // const conversation = await getConversationService(conversationId);
+    const conversation = await removeUserService({
+      userId,
+      conversationId,
+      removeUser,
+      blockRejoin,
+    });
 
     return resp.status(StatusCodes.OK).json(conversation);
   } catch (error) {
