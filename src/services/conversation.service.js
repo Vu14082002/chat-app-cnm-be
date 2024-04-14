@@ -2,14 +2,12 @@ const createHttpError = require('http-errors');
 const { ConversationModel } = require('../models/conversation.model');
 const { UserModel } = require('../models/user.model');
 const httpErrors = require('http-errors');
+const { cli } = require('winston/lib/winston/config');
 
 const checkExistConversation = async (senderUserId, receiverUserId) => {
   let conversationList = await ConversationModel.findOne({
     isGroup: false,
-    $and: [
-      { users: { $elemMatch: { $eq: senderUserId } } },
-      { users: { $elemMatch: { $eq: receiverUserId } } },
-    ],
+    users: { $all: [senderUserId, receiverUserId] },
   })
     .populate('users', '-password')
     .populate('lastMessage');
@@ -20,7 +18,10 @@ const checkExistConversation = async (senderUserId, receiverUserId) => {
     path: 'lastMessage.sender',
     select: 'name avatar status',
   });
-  return conversationList[0];
+  console.log('--------------Not comming--------------------');
+  console.log(conversationList);
+  // return conversationList[0];
+  return conversationList;
 };
 
 const createConversation = async (data) => {
