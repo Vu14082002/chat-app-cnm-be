@@ -290,6 +290,27 @@ const removeUserService = async ({ userId, conversationId, removeUser, blockRejo
   }
 };
 
+const leaveGroupService = async ({ userId, conversationId }) => {
+  try {
+    const conversation = await ConversationModel.findById(conversationId);
+    if (!conversation) throw createHttpError.NotFound('Invalid conversation');
+    if (conversation.admin === userId) {
+      throw createHttpError.Forbidden('You cannot remove the owner of the conversation');
+    }
+    conversation.users.pull(userId);
+    await conversation.save();
+    return conversation;
+  } catch (error) {
+    if (error instanceof createHttpError.NotFound) {
+      throw error;
+    }
+    if (error instanceof createHttpError.Forbidden) {
+      throw error;
+    }
+    throw createHttpError.InternalServerError('Failed to remove user from conversation', error);
+  }
+};
+
 const setOwnerRoleService = async ({ conversationId, userId }) => {
   try {
     const conversation = await ConversationModel.findByIdAndUpdate(conversationId, {
@@ -351,4 +372,5 @@ module.exports = {
   setOwnerRoleService,
   addAdminRole,
   removeAdminRole,
+  leaveGroupService,
 };
