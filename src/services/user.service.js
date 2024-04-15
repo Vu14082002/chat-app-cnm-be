@@ -17,20 +17,42 @@ const findUserByIdService = async (id) => {
 
 const findUserByContactOrNameRegex = async (keyword, userId) => {
   try {
-    const userFind = await UserModel.find({
-      $and: [
-        {
-          $or: [{ _id: { $eq: keyword } }, { name: { $regex: keyword, $options: 'i' } }],
-        },
-        { _id: { $ne: userId } },
-      ],
-    }).select('name avatar');
+    const [userFind, user, sendRequestAddFriend, waitResponseAddFriend] = await Promise.all([
+      UserModel.find({
+        $and: [
+          {
+            $or: [{ _id: { $eq: keyword } }, { name: { $regex: keyword, $options: 'i' } }],
+          },
+          { _id: { $ne: userId } },
+        ],
+      }).select('name avatar'),
+      FriendshipModel.findById(userId),
+      FriendRequestModel.find({
+        sender_id: userId,
+      }),
+      FriendRequestModel.find({
+        receiver_id: userId,
+      }),
+    ]);
+
+    // const userFind = await UserModel.find({
+    //   $and: [
+    //     {
+    //       $or: [{ _id: { $eq: keyword } }, { name: { $regex: keyword, $options: 'i' } }],
+    //     },
+    //     { _id: { $ne: userId } },
+    //   ],
+    // }).select('name avatar');
 
     // Lấy danh sách bạn bè của người dùng hiện tại
-    const user = await FriendshipModel.findById(userId);
+    // const user = await FriendshipModel.findById(userId);
     const userFriendIds = new Set(user?.friends.map((friend) => friend.toString()) || []);
-    const sendRequestAddFriend = await FriendRequestModel.findOne({ sender_id: userId });
-    const waitResponseAddFriend = await FriendRequestModel.findOne({ receiver_id: userId });
+    // const sendRequestAddFriend = await FriendRequestModel.find({
+    //   sender_id: userId,
+    // });
+    // const waitResponseAddFriend = await FriendRequestModel.find({
+    //   receiver_id: userId,
+    // });
 
     // Thêm thuộc tính isFriend vào từng user trong danh sách tìm được
     // const usersWithFriendStatus = userFind.map((user) => ({
@@ -42,9 +64,9 @@ const findUserByContactOrNameRegex = async (keyword, userId) => {
       let status = 0;
       if (userFriendIds.has(user._id)) {
         status = 1;
-      } else if (sendRequestAddFriend) {
+      } else if (sendRequestAddFriend.some((u) => u.receiver_id === user._id)) {
         status = 2;
-      } else if (waitResponseAddFriend) {
+      } else if (waitResponseAddFriend.some((u) => u.sender_id === user._id)) {
         status = 3;
       } else {
         status = 0;
@@ -53,6 +75,7 @@ const findUserByContactOrNameRegex = async (keyword, userId) => {
     });
     return usersWithFriendStatus;
   } catch (error) {
+    console.error(error);
     throw httpErrors.BadRequest('Something went wrong. Please try again later.');
   }
 };
