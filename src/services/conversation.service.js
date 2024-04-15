@@ -8,14 +8,7 @@ const checkExistConversation = async (senderUserId, receiverUserId) => {
     isGroup: false,
     users: { $all: [senderUserId, receiverUserId] },
   })
-    .populate('users', [
-      '-password',
-      '-qrCode',
-      '-background',
-      '-dateOfBirth',
-      '-createdAt',
-      '-updatedAt',
-    ])
+    .populate('users', ['-password', '-deleted'])
     .populate('lastMessage')
     .populate({
       path: 'pinnedMessages',
@@ -24,16 +17,23 @@ const checkExistConversation = async (senderUserId, receiverUserId) => {
         select: 'name avatar',
       },
     });
-  console.log(conversationList);
   if (!conversationList) {
     return null;
   }
+
   conversationList = await UserModel.populate(conversationList, {
     path: 'lastMessage.sender',
     select: 'name avatar status',
   });
   // return conversationList[0];
-  return conversationList;
+  const commonGroupCount = await ConversationModel.calculateAmountGroup(
+    senderUserId,
+    receiverUserId
+  );
+  return {
+    conversationList,
+    commonGroupCount,
+  };
 };
 
 const createConversation = async (data) => {

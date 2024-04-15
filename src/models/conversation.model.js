@@ -101,7 +101,17 @@ ConversationSchema.pre('save', async function (next) {
   }
   next();
 });
-
+ConversationSchema.statics.calculateAmountGroup = async function (userId1, userId2) {
+  try {
+    const count = await this.countDocuments({
+      isGroup: true,
+      users: { $all: [userId1, userId2] },
+    });
+    return count;
+  } catch (error) {
+    throw error;
+  }
+};
 const ConversationModel =
   mongoose.model.ConversationModel || mongoose.model('ConversationModel', ConversationSchema);
 module.exports = { ConversationModel };
