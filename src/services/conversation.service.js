@@ -8,8 +8,23 @@ const checkExistConversation = async (senderUserId, receiverUserId) => {
     isGroup: false,
     users: { $all: [senderUserId, receiverUserId] },
   })
-    .populate('users', '-password')
-    .populate('lastMessage');
+    .populate('users', [
+      '-password',
+      '-qrCode',
+      '-background',
+      '-dateOfBirth',
+      '-createdAt',
+      '-updatedAt',
+    ])
+    .populate('lastMessage')
+    .populate({
+      path: 'pinnedMessages',
+      populate: {
+        path: 'sender',
+        select: 'name avatar',
+      },
+    });
+  console.log(conversationList);
   if (!conversationList) {
     return null;
   }
