@@ -16,6 +16,7 @@ const {
   setOwnerRoleService,
   addAdminRole,
   removeAdminRole,
+  leaveGroupService,
 } = require('../services/conversation.service');
 const { findUserByIdService, isFriendsService } = require('../services/user.service');
 const { uploadToS3 } = require('../helpers/uploadToS3.helper');
@@ -250,6 +251,21 @@ const removeUser = async (req, resp, next) => {
   }
 };
 
+const leaveGroup = async (req, resp, next) => {
+  try {
+    const { conversationId } = req.params;
+    const { userId } = req.user;
+    await leaveGroupService({
+      userId,
+      conversationId,
+    });
+    const conversation = await getConversationService(conversationId);
+    return resp.status(StatusCodes.OK).json(conversation);
+  } catch (error) {
+    next(next);
+  }
+};
+
 const addRole = async (req, resp, next) => {
   const { conversationId, userId } = req.params;
   const { role } = req.body;
@@ -296,4 +312,5 @@ module.exports = {
   removeUser,
   addRole,
   removeRole,
+  leaveGroup,
 };
