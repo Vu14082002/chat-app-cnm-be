@@ -26,14 +26,15 @@ const checkExistConversation = async (senderUserId, receiverUserId) => {
     select: 'name avatar status',
   });
   // return conversationList[0];
-  const commonGroupCount = await ConversationModel.calculateAmountGroup(
-    senderUserId,
-    receiverUserId
-  );
-  return {
-    conversationList,
-    commonGroupCount,
-  };
+  // const commonGroupCount = await ConversationModel.calculateAmountGroup(
+  //   senderUserId,
+  //   receiverUserId
+  // );
+  // return {
+  //   conversationList,
+  //   commonGroupCount,
+  // };
+  return conversationList;
 };
 
 const createConversation = async (data) => {

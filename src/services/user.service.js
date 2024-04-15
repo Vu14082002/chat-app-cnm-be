@@ -7,6 +7,7 @@ const { FriendshipModel } = require('../models/friendship.model');
 const { FriendModel, FriendRequestModel } = require('../models/friendRequest.model');
 const NotificationModel = require('../models/notification.model');
 const { CommandFailedEvent } = require('mongodb');
+const { ConversationModel } = require('../models/conversation.model');
 
 // find user by id
 const findUserByIdService = async (id) => {
@@ -59,7 +60,7 @@ const findUserByContactOrNameRegex = async (keyword, userId) => {
     //   ...user.toObject(),
     //   isFriend: userFriendIds.has(user._id),
     // }));
-    const usersWithFriendStatus = userFind.map((user) => {
+    const usersWithFriendStatusPromise = userFind.map(async (user) => {
       // status: 0: không phải là bạn bè, 1: đã là bạn bè, 2: đã gửi yêu cầu kết bạn, 3: được gửi yêu cầu kết bạn
       let status = 0;
       if (userFriendIds.has(user._id)) {
@@ -71,8 +72,11 @@ const findUserByContactOrNameRegex = async (keyword, userId) => {
       } else {
         status = 0;
       }
-      return { ...user.toObject(), status };
+      const commonGroupCount = await ConversationModel.calculateAmountGroup(userId, user._id);
+
+      return { ...user.toObject(), status, commonGroupCount };
     });
+    const usersWithFriendStatus = await Promise.all(usersWithFriendStatusPromise);
     return usersWithFriendStatus;
   } catch (error) {
     console.error(error);
