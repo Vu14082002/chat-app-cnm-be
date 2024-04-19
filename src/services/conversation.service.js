@@ -275,6 +275,7 @@ const removeUserService = async ({ userId, conversationId, removeUser, blockRejo
       throw createHttpError.Forbidden('You cannot remove the owner of the conversation');
     }
     conversation.users.pull(removeUser);
+    conversation.deputy.pull(removeUser);
     if (blockRejoin === 'true') {
       conversation.blockRejoin.push(removeUser);
     }
@@ -299,6 +300,7 @@ const leaveGroupService = async ({ userId, conversationId }) => {
       throw createHttpError.Forbidden('You cannot remove the owner of the conversation');
     }
     conversation.users.pull(userId);
+    conversation.deputy.pull(userId);
     await conversation.save();
     return conversation;
   } catch (error) {

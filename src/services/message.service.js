@@ -277,7 +277,6 @@ const forwardMessageService = async (userId, messageId, conversationIds) => {
           files: message.files,
           location: message.location,
           sticker: message.sticker,
-          reply: message.reply,
           statuses: message.statuses,
           // deleted: message.deleted,
           // usersDeleted: message.usersDeleted,

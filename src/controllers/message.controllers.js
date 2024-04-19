@@ -221,11 +221,7 @@ const forwardMessage = async (req, resp, next) => {
     const { messageId, conversationIds } = req.body;
     const messageSaves = await forwardMessageService(userId, messageId, conversationIds);
     console.log(messageSaves.length);
-    const messagepopu = await Promise.all(
-      messageSaves.map(async (e) => {
-        return await messagePopulate(e._id);
-      })
-    );
+    const messagepopu = await Promise.all(messageSaves.map((e) => messagePopulate(e._id)));
     return resp.status(StatusCodes.OK).json(messagepopu);
   } catch (error) {
     next(error);
