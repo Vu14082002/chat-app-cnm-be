@@ -139,8 +139,9 @@ const getMessage = async (req = request, resp = response, next) => {
 
 const getReplyMessages = async (req = request, resp = response, next) => {
   try {
-    const { replyId } = req.params;
-    const replyMessages = await getReplyMessagesService(replyId);
+    const { messageId, conversationId } = req.params;
+    const userId = req.user.userId;
+    const replyMessages = await getReplyMessagesService(conversationId, messageId, userId);
     resp.status(StatusCodes.OK).json(replyMessages);
   } catch (error) {
     next(error);

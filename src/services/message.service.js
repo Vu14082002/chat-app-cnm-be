@@ -84,8 +84,14 @@ const getConversationMessage = async (conversationId, messageId, userId) => {
   return message;
 };
 
-const getReplyMessages = async (replyId) => {
-  const messages = await MessageModel.find({ _id: { $gte: replyId } })
+const getReplyMessages = async (conversationId, replyId, userId) => {
+  const messages = await MessageModel.find({
+    $and: [
+      { _id: { $gte: replyId } },
+      { conversation: conversationId },
+      { 'usersDeleted.user': { $nin: [userId] } },
+    ],
+  })
     .populate('sender', 'name avatar')
     .populate('reply', 'sender messages files')
     .populate({
@@ -93,6 +99,20 @@ const getReplyMessages = async (replyId) => {
       populate: {
         path: 'sender',
         select: 'name avatar',
+      },
+    })
+    .populate({
+      path: 'conversation',
+      select: 'pinnedMessages _id ',
+      model: 'ConversationModel',
+      populate: {
+        path: 'pinnedMessages',
+        select: 'sender messages files sticker -_id',
+        populate: {
+          path: 'sender',
+          select: 'name',
+          model: 'UserModel',
+        },
       },
     })
     .sort({ createdAt: -1 });

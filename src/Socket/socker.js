@@ -237,10 +237,10 @@ const socketServer = (socket, io) => {
   });
 
   // revocation Request Friend
-  socket.on('revocationRequestFriend', ({ _id, senderId }) => {
+  socket.on('revocationRequestFriend', ({ _id, receivedId, senderId }) => {
     if (!_id || !senderId) return;
 
-    socket.in(senderId).emit('revocationRequestFriend', { _id });
+    socket.in(senderId).emit('revocationRequestFriend', { _id, receivedId });
   });
 
   // Delete friend
