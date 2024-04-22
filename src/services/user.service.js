@@ -325,6 +325,79 @@ const isFriendsService = async (friends, userId) => {
   }
 };
 
+const getSuggestFriendsService = async (userId) => {
+  try {
+    const [userFind, user, sendRequestAddFriend, waitResponseAddFriend] = await Promise.all([
+      ConversationModel.aggregate([
+        { $match: { $expr: { $in: [userId, '$users'] } } },
+        { $project: { _id: 0, users: 1 } },
+        { $unwind: '$users' },
+        { $match: { $expr: { $ne: ['$users', userId] } } },
+        { $group: { _id: '$users' } },
+        { $lookup: { from: 'users', localField: '_id', foreignField: '_id', as: 'users' } },
+        { $project: { password: 0, deleted: 0, friends: 0, __v: 0 } },
+        { $unwind: '$users' },
+        { $replaceRoot: { newRoot: '$users' } },
+      ]),
+      FriendshipModel.findById(userId),
+      FriendRequestModel.find({
+        sender_id: userId,
+      }),
+      FriendRequestModel.find({
+        receiver_id: userId,
+      }),
+    ]);
+
+    // const userFind = await UserModel.find({
+    //   $and: [
+    //     {
+    //       $or: [{ _id: { $eq: keyword } }, { name: { $regex: keyword, $options: 'i' } }],
+    //     },
+    //     { _id: { $ne: userId } },
+    //   ],
+    // }).select('name avatar');
+
+    // Lấy danh sách bạn bè của người dùng hiện tại
+    // const user = await FriendshipModel.findById(userId);
+    const userFriendIds = new Set(user?.friends.map((friend) => friend.toString()) || []);
+    // const sendRequestAddFriend = await FriendRequestModel.find({
+    //   sender_id: userId,
+    // });
+    // const waitResponseAddFriend = await FriendRequestModel.find({
+    //   receiver_id: userId,
+    // });
+
+    // Thêm thuộc tính isFriend vào từng user trong danh sách tìm được
+    // const usersWithFriendStatus = userFind.map((user) => ({
+    //   ...user.toObject(),
+    //   isFriend: userFriendIds.has(user._id),
+    // }));
+    const usersWithFriendStatusPromise = userFind.map(async (user) => {
+      // status: 0: không phải là bạn bè, 1: đã là bạn bè, 2: đã gửi yêu cầu kết bạn, 3: được gửi yêu cầu kết bạn
+      let status = 0;
+      if (userFriendIds.has(user._id)) {
+        status = 1;
+      } else if (sendRequestAddFriend.some((u) => u.receiver_id === user._id)) {
+        status = 2;
+      } else if (waitResponseAddFriend.some((u) => u.sender_id === user._id)) {
+        status = 3;
+      } else {
+        status = 0;
+      }
+
+      if (status) return Promise.resolve(null);
+
+      const commonGroupCount = await ConversationModel.calculateAmountGroup(userId, user._id);
+
+      return { ...user, status, commonGroupCount };
+    });
+    const usersWithFriendStatus = await Promise.all(usersWithFriendStatusPromise);
+    return usersWithFriendStatus.filter(Boolean);
+  } catch (error) {
+    throw httpErrors.BadRequest('Something went wrong. Please try again later.');
+  }
+};
+
 module.exports = {
   findUserByIdService,
   findUserByContactOrNameRegex,
@@ -342,4 +415,5 @@ module.exports = {
   listRequestfriendWaitResponeService,
   getListRecommendFriendService,
   isFriendsService,
+  getSuggestFriendsService,
 };

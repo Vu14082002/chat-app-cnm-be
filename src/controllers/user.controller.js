@@ -15,6 +15,7 @@ const {
   listRequestfriendWaitResponeService,
   rejectriendRequestService,
   getListRecommendFriendService,
+  getSuggestFriendsService,
 } = require('../services/user.service');
 const { StatusCodes } = require('http-status-codes');
 const uuid = require('uuid');
@@ -188,6 +189,16 @@ const recommendedfriends = async (req, resp, next) => {
   }
 };
 
+const suggestFriends = async (req, resp, next) => {
+  try {
+    const userId = req.user.userId;
+    const listFriend = await getSuggestFriendsService(userId);
+    return resp.status(StatusCodes.OK).json(listFriend);
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   findUserByPhone,
   userInfo,
@@ -202,4 +213,5 @@ module.exports = {
   revocationRequestFriend,
   getListFriend,
   recommendedfriends,
+  suggestFriends,
 };

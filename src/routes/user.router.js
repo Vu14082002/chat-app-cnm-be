@@ -13,6 +13,7 @@ const {
   listRequestfriendWaitRespone,
   rejectfriend,
   recommendedfriends,
+  suggestFriends,
 } = require('../controllers/user.controller');
 const trimRequest = require('trim-request');
 const { checkAuthorized } = require('../middlewares/auth.middleware');
@@ -37,7 +38,7 @@ userRouter
   .get(trimRequest.all, checkAuthorized, listRequestfriendWaitRespone);
 userRouter.route('/acceptfriend').post(trimRequest.all, checkAuthorized, acceptFriendRequest);
 userRouter.route('/rejectfriend').post(trimRequest.all, checkAuthorized, rejectfriend);
-
+userRouter.route('/suggestFriends').get(checkAuthorized, suggestFriends);
 userRouter
   .route('/revocationRequestFriend')
   .post(trimRequest.all, checkAuthorized, revocationRequestFriend);
