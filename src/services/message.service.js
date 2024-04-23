@@ -47,6 +47,22 @@ const messagePopulate = async (id) => {
 const getConversationMessage = async (conversationId, messageId, userId) => {
   const filter = [{ conversation: conversationId }];
 
+  const conversation = await ConversationModel.findById(conversationId);
+
+  if (!conversation) {
+    throw createHttpError.NotFound('conversationId is not contain');
+  }
+
+  const detail = conversation.details.find((item) => item.userId === userId);
+
+  if (detail?.deletedAt) {
+    filter.push({
+      createdAt: {
+        $gte: detail.deletedAt,
+      },
+    });
+  }
+
   if (messageId) filter.push({ _id: { $lt: messageId } });
   filter.push({ 'usersDeleted.user': { $nin: [userId] } });
 
@@ -155,7 +171,7 @@ const deleteMessageForMeService = async (userId, messageId) => {
     if (!updatedMessage) {
       throw createHttpError.NotFound(`Message: ${messageId} not found`);
     }
-    return true;
+    return updatedMessage;
   } catch (error) {
     if (error instanceof createHttpError.NotFound) {
       throw error;
@@ -321,6 +337,29 @@ const forwardMessageService = async (userId, messageId, conversationIds) => {
   }
 };
 
+const getLastMessage = async ({ conversationId, userId }) => {
+  try {
+    const message = await MessageModel.findOne(
+      {
+        conversation: conversationId,
+        usersDeleted: {
+          $not: {
+            $elemMatch: { user: userId },
+          },
+        },
+      },
+      {},
+      { sort: { createdAt: -1 } }
+    );
+
+    return message;
+  } catch (error) {
+    console.log(error);
+
+    throw createHttpError.InternalServerError('Get last message something wrong', error);
+  }
+};
+
 module.exports = {
   createMessage,
   messagePopulate,
@@ -332,4 +371,5 @@ module.exports = {
   unPinMessageService,
   reactForMessageService,
   forwardMessageService,
+  getLastMessage,
 };

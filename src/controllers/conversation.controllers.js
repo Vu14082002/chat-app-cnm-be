@@ -17,6 +17,7 @@ const {
   addAdminRole,
   removeAdminRole,
   leaveGroupService,
+  updateConversationDetailsService,
 } = require('../services/conversation.service');
 const { findUserByIdService, isFriendsService } = require('../services/user.service');
 const { uploadToS3 } = require('../helpers/uploadToS3.helper');
@@ -301,6 +302,29 @@ const removeRole = async (req, resp, next) => {
   }
 };
 
+const deleteConversationIndividual = async (req, resp, next) => {
+  try {
+    const conversationId = req.params.conversationId;
+    const userId = req.user.userId;
+
+    updateConversationDetailsService({
+      conversationId,
+      userId,
+      type: 'DELETE_CONVERSATION',
+    })
+      .then(() => console.log('Finish....'))
+      .catch((err) => console.error(err));
+
+    return resp.status(StatusCodes.OK).json({
+      message: 'Conversation deleted',
+    });
+  } catch (error) {
+    console.error(error);
+
+    next(error);
+  }
+};
+
 module.exports = {
   openConversation,
   getConversations,
@@ -313,4 +337,5 @@ module.exports = {
   addRole,
   removeRole,
   leaveGroup,
+  deleteConversationIndividual,
 };

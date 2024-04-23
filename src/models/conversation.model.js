@@ -82,6 +82,31 @@ const ConversationSchema = mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    details: {
+      type: [
+        {
+          userId: {
+            type: String,
+            ref: 'UserModel',
+            required: true,
+          },
+          lastMessage: {
+            type: ObjectId,
+            ref: 'MessageModel',
+            default: null,
+          },
+          unreadMessageCount: {
+            type: Number,
+            default: 0,
+          },
+          deletedAt: {
+            type: Date,
+            default: null,
+          },
+        },
+      ],
+      default: [],
+    },
   },
 
   {

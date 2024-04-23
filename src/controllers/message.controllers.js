@@ -12,8 +12,12 @@ const {
   reactForMessageService,
   unPinMessageService,
   forwardMessageService,
+  getLastMessage,
 } = require('../services/message.service');
-const { updateLastMessage } = require('../services/conversation.service');
+const {
+  updateLastMessage,
+  updateConversationDetailsService,
+} = require('../services/conversation.service');
 const { uploadToS3 } = require('../helpers/uploadToS3.helper');
 const { convertToBinary } = require('../helpers/converFile');
 const { checkValidImg } = require('../helpers/checkValidImg');
@@ -113,7 +117,15 @@ const sendMessage = async (req, resp, next) => {
       });
     }
     const messageSaved = await createMessage(messageData);
-    await updateLastMessage(conversationId, messageSaved);
+    await Promise.all([
+      updateLastMessage(conversationId, messageSaved),
+      updateConversationDetailsService({
+        conversationId,
+        lastMessageId: messageSaved._id,
+        senderId: userId,
+        type: 'ADD_MESSAGE',
+      }),
+    ]);
     return resp.status(StatusCodes.OK).json({
       message: await messagePopulate(messageSaved._id),
       invalidFiles,
@@ -131,6 +143,15 @@ const getMessage = async (req = request, resp = response, next) => {
     const userId = req.user.userId;
     const conversationId = req.params.conversationId;
     const message = await getConversationMessage(conversationId, messageId, userId);
+
+    updateConversationDetailsService({
+      conversationId,
+      userId,
+      type: 'GET_MESSAGE',
+    })
+      .then(() => console.log('Finish....'))
+      .catch((err) => console.error(err));
+
     resp.status(StatusCodes.OK).json(message);
   } catch (error) {
     next(error);
@@ -162,8 +183,23 @@ const deleteMessageForMe = async (req, resp, next) => {
   try {
     const messageId = req.body.messageId;
     const senderId = req.user.userId;
-    await deleteMessageForMeService(senderId, messageId);
-    return resp.status(StatusCodes.OK).json({ message: 'delete success' });
+    const message = await deleteMessageForMeService(senderId, messageId);
+
+    const lastMessage = await getLastMessage({
+      conversationId: message.conversation,
+      userId: senderId,
+    });
+
+    updateConversationDetailsService({
+      conversationId: message.conversation,
+      lastMessageId: lastMessage?._id,
+      userId: senderId,
+      type: 'DELETE_MESSAGE_FOR_ME',
+    })
+      .then(() => console.log('Finish....'))
+      .catch((err) => console.error(err));
+
+    return resp.status(StatusCodes.OK).json({ message: 'delete success', lastMessage });
   } catch (error) {
     next(error);
   }
@@ -221,7 +257,20 @@ const forwardMessage = async (req, resp, next) => {
     const userId = req.user.userId;
     const { messageId, conversationIds } = req.body;
     const messageSaves = await forwardMessageService(userId, messageId, conversationIds);
-    console.log(messageSaves.length);
+
+    Promise.all(
+      messageSaves.map((message) =>
+        updateConversationDetailsService({
+          conversationId: message.conversation,
+          lastMessageId: message._id,
+          senderId: userId,
+          type: 'ADD_MESSAGE',
+        })
+      )
+    )
+      .then(() => console.log('Finish....'))
+      .catch((err) => console.error(err));
+
     const messagepopu = await Promise.all(messageSaves.map((e) => messagePopulate(e._id)));
     return resp.status(StatusCodes.OK).json(messagepopu);
   } catch (error) {
