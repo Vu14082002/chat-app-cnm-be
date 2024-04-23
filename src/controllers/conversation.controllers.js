@@ -325,6 +325,25 @@ const deleteConversationIndividual = async (req, resp, next) => {
   }
 };
 
+const addToGroups = async (req, resp, next) => {
+  try {
+    const { conversationIds, userId } = req.body;
+
+    if (!conversationIds?.length || !userId) throw createHttpError.BadRequest('Invalid data');
+
+    await Promise.all(
+      conversationIds.map((conversationId) =>
+        addUsersService({ conversationId, userIds: [userId] })
+      )
+    );
+    const conversations = await Promise.all(conversationIds.map(getConversationService));
+
+    return resp.status(StatusCodes.OK).json(conversations);
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   openConversation,
   getConversations,
@@ -338,4 +357,5 @@ module.exports = {
   removeRole,
   leaveGroup,
   deleteConversationIndividual,
+  addToGroups,
 };

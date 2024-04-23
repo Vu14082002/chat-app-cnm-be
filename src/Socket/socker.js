@@ -264,5 +264,12 @@ const socketServer = (socket, io) => {
 
     socket.in(userId).emit('removeUserFromConversation', { conversationId });
   });
+
+  // Add to groups
+  socket.on('addToGroups', ({ conversations, userId }) => {
+    if (!conversations || !userId) return;
+
+    socket.in(userId).emit('addToGroups', { conversations });
+  });
 };
 module.exports = { socketServer };
