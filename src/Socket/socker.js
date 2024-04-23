@@ -1,6 +1,10 @@
 let userOnline = [];
+const friendsByUser = {};
+
 const socketServer = (socket, io) => {
-  socket.on('online', (userId) => {
+  socket.on('online', ({ userId, friendIds }) => {
+    if (!userId || !friendIds?.length) return;
+
     socket.join(userId);
     // Kiểm tra xem người dùng đã tồn tại trong danh sách hay chưa
     const existingUserIndex = userOnline.findIndex((u) => u.userId === userId);
@@ -12,14 +16,39 @@ const socketServer = (socket, io) => {
       userOnline[existingUserIndex].socketId = socket.id;
     }
     console.log(userOnline);
-    io.emit('usersOnline', userOnline);
+
+    friendsByUser[userId] = friendIds;
+
+    const onlineIds = [];
+    friendIds.forEach((friendId) => {
+      if (friendsByUser[friendId]) {
+        socket.in(friendId).emit('userOnline', userId);
+        onlineIds.push(friendId);
+      }
+    });
+    io.in(userId).emit('usersOnline', onlineIds);
   });
 
   // Xử lý sự kiện ngắt kết nối
   socket.on('disconnect', () => {
+    let userId = '';
+
     // Lọc ra người dùng đã ngắt kết nối và cập nhật lại danh sách
-    userOnline = userOnline.filter((u) => u.socketId !== socket.id);
-    io.emit('usersOnline', userOnline);
+    userOnline = userOnline.filter((u) => {
+      if (u.socketId === socket.id) {
+        if (typeof u.userId === 'string') userId = u.userId;
+        return false;
+      }
+      return true;
+    });
+
+    const friendIds = friendsByUser[userId] || [];
+
+    friendIds.forEach((friendId) => {
+      socket.in(friendId).emit('userOffline', userId);
+    });
+
+    delete friendsByUser[userId];
   });
   // tạo room socket và join vào
   socket.on('openConversation', ({ conversation, user }) => {
@@ -112,19 +141,6 @@ const socketServer = (socket, io) => {
     }
   });
   // rời nhóm
-  let userOnline = [];
-  socket.on('online', (userId) => {
-    socket.join(userId);
-    checkOnline = userOnline.some((u) => u.userId === userId);
-    if (!checkOnline) {
-      userOnline.push({ userId, socketId: socket.id });
-    }
-    io.emit('usersOnline', userOnline);
-  });
-  socket.on('disconnect', () => {
-    userOnline = userOnline.filter((u) => u.socketId !== socket.id);
-    io.emit('usersOnline', userOnline);
-  });
   socket.on('sendMessage', (message) => {
     const conversation = message.conversation;
     if (!conversation) {
