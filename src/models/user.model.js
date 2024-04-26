@@ -1,5 +1,4 @@
 const mongoose = require('mongoose');
-const { ObjectId } = mongoose.Schema.Types;
 const bcrypt = require('bcrypt');
 const QRCode = require('qrcode');
 

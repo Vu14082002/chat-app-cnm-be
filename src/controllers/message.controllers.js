@@ -13,6 +13,8 @@ const {
   unPinMessageService,
   forwardMessageService,
   getLastMessage,
+  addMessageNotificationService,
+  messageNotificationPopulate,
 } = require('../services/message.service');
 const {
   updateLastMessage,
@@ -47,6 +49,7 @@ const sendMessage = async (req, resp, next) => {
             link: uploadedFile,
             name: file.originalname,
             type: file.mimetype,
+            size: file.size,
           };
           const fileExtension = uploadedFile.split('.').pop().toLowerCase();
           if (imageExtensions.includes(fileExtension)) {
@@ -137,6 +140,7 @@ const sendMessage = async (req, resp, next) => {
   }
 };
 
+// TODO Không lấy thông báo remove user của chính mình
 const getMessage = async (req = request, resp = response, next) => {
   try {
     const messageId = req.query.messageId;
@@ -278,6 +282,36 @@ const forwardMessage = async (req, resp, next) => {
   }
 };
 
+const addMessageNotification = async (req, resp, next) => {
+  try {
+    const { userIds, conversationId, conversations, messageId, type } = req.body;
+    const userId = req.user.userId;
+    const message = await addMessageNotificationService({
+      userIds,
+      conversationId,
+      conversations,
+      messageId,
+      type,
+      senderId: userId,
+    });
+
+    const messagePopulate = await messageNotificationPopulate(message._id);
+
+    updateConversationDetailsService({
+      conversationId,
+      lastMessageId: message._id,
+      userId,
+      type: 'ADD_MESSAGE_NOTIFICATION',
+    })
+      .then(() => console.log('Finish....'))
+      .catch((err) => console.error(err));
+
+    return resp.status(StatusCodes.OK).json(messagePopulate);
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   sendMessage,
   getMessage,
@@ -288,4 +322,5 @@ module.exports = {
   unPinMessage,
   reactForMessage,
   forwardMessage,
+  addMessageNotification,
 };

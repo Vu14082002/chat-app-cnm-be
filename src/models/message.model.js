@@ -1,5 +1,29 @@
 const mongoose = require('mongoose');
+const { messageNotificationType } = require('../constants');
 const { ObjectId } = mongoose.Schema.Types;
+
+const notificationSchema = mongoose.Schema({
+  users: {
+    type: [String],
+    ref: 'UserModel',
+    default: [],
+  },
+  conversations: {
+    type: [String],
+    ref: 'ConversationModel',
+    default: [],
+  },
+  message: {
+    type: String,
+    ref: 'MessageModel',
+    default: null,
+  },
+  type: {
+    type: String,
+    enum: Object.values(messageNotificationType),
+    required: true,
+  },
+});
 
 const messageSchema = mongoose.Schema(
   {
@@ -47,6 +71,10 @@ const messageSchema = mongoose.Schema(
         _id: {
           type: mongoose.Schema.Types.ObjectId,
           select: false,
+        },
+        size: {
+          type: Number,
+          required: true,
         },
       },
     ],
@@ -99,6 +127,10 @@ const messageSchema = mongoose.Schema(
           },
         },
       ],
+    },
+    notification: {
+      type: notificationSchema,
+      default: null,
     },
   },
   {

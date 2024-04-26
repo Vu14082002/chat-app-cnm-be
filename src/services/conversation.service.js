@@ -120,10 +120,33 @@ const getDetailConversations = async ({ query = {}, userId }) => {
     }
   });
   conversations = conversations.filter((conv) => !conv.deleted);
-  conversations = await UserModel.populate(conversations, {
-    path: 'lastMessage.sender',
-    select: 'name avatar status',
-  });
+  conversations = await UserModel.populate(
+    conversations,
+    {
+      path: 'lastMessage.sender',
+      select: 'name avatar status',
+    },
+    {
+      path: 'lastMessage.notification.users',
+      select: 'name avatar',
+      model: 'UserModel',
+    },
+    {
+      path: 'lastMessage.notification.conversations',
+      select: 'name isGroup users',
+      model: 'ConversationModel',
+    },
+    {
+      path: 'lastMessage.notification.message',
+      select: 'sender messages files sticker statuses deleted',
+      model: 'MessageModel',
+      populate: {
+        path: 'sender',
+        select: 'name avatar',
+        model: 'UserModel',
+      },
+    }
+  );
   return conversations;
 };
 
@@ -206,9 +229,28 @@ const getConversationService = async (conversationId, userId = '') => {
         path: 'pinnedMessages.sender',
         select: 'name avatar',
       },
+      {
+        path: 'lastMessage.notification.users',
+        select: 'name avatar',
+        model: 'UserModel',
+      },
+      {
+        path: 'lastMessage.notification.conversations',
+        select: 'name isGroup users',
+        model: 'ConversationModel',
+      },
+      {
+        path: 'lastMessage.notification.message',
+        select: 'sender messages files sticker statuses deleted',
+        model: 'MessageModel',
+        populate: {
+          path: 'sender',
+          select: 'name avatar',
+          model: 'UserModel',
+        },
+      },
     ]);
 
-    conversation = conversation.filter((conv) => conv.delete !== false);
     conversation = await UserModel.populate(conversation, {
       path: 'lastMessage.sender',
       select: 'name avatar status',
@@ -260,14 +302,16 @@ const updateConversationDetailsService = async ({
       });
     }
 
-    if (type === 'ADD_MESSAGE') {
+    if (type.startsWith('ADD_MESSAGE')) {
       conversation.details.forEach((detail) => {
         detail.lastMessage = lastMessageId;
 
-        if (detail.userId !== senderId) {
-          detail.unreadMessageCount = detail.unreadMessageCount + 1;
-        } else {
-          detail.unreadMessageCount = 0;
+        if (type === 'ADD_MESSAGE') {
+          if (detail.userId !== senderId) {
+            detail.unreadMessageCount = detail.unreadMessageCount + 1;
+          } else {
+            detail.unreadMessageCount = 0;
+          }
         }
       });
     } else if (type === 'GET_MESSAGE') {
@@ -348,10 +392,13 @@ const deleteConversationService = async (conversationId, userId) => {
   }
 };
 
-const addUsersService = async ({ conversationId, userIds }) => {
+const addUsersService = async ({ conversationId, userIds, lastMessage }) => {
   try {
     const conversation = await ConversationModel.findByIdAndUpdate(conversationId, {
       $addToSet: { users: userIds },
+      $push: {
+        details: { $each: userIds.map((userId) => ({ userId, lastMessage: lastMessage?._id })) },
+      },
     });
     if (!conversation) throw createHttpError.NotFound('Invalid conversation');
 
@@ -377,6 +424,7 @@ const removeUserService = async ({ userId, conversationId, removeUser, blockRejo
     }
     conversation.users.pull(removeUser);
     conversation.deputy.pull(removeUser);
+    conversation.details = conversation.details.filter((detail) => detail.userId !== removeUser);
     if (blockRejoin === 'true') {
       conversation.blockRejoin.push(removeUser);
     }
@@ -402,6 +450,7 @@ const leaveGroupService = async ({ userId, conversationId }) => {
     }
     conversation.users.pull(userId);
     conversation.deputy.pull(userId);
+    conversation.details = conversation.details.filter((detail) => detail.userId !== userId);
     await conversation.save();
     return conversation;
   } catch (error) {

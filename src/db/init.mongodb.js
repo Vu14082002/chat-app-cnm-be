@@ -17,8 +17,6 @@ class Database {
       // .connect(connectString, { maxPoolSize: 100, useNewUrlParser: true, useUnifiedTopology: true, readPreference: 'nearest' })
       .connect(connectString, {
         maxPoolSize: 100,
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
         readPreference: 'primary',
       })
       .then(() => {

@@ -21,6 +21,7 @@ const {
 } = require('../services/conversation.service');
 const { findUserByIdService, isFriendsService } = require('../services/user.service');
 const { uploadToS3 } = require('../helpers/uploadToS3.helper');
+const { getLastMessage } = require('../services/message.service');
 
 const openConversation = async (req, resp, next) => {
   try {
@@ -220,9 +221,11 @@ const addUser = async (req, resp, next) => {
   const conversationId = req.params.conversationId;
   const { userIds } = req.body;
   try {
-    await addUsersService({ conversationId, userIds });
+    const lastMessage = await getLastMessage({ conversationId });
 
-    const conversation = await getConversationService(conversationId);
+    await addUsersService({ conversationId, userIds, lastMessage });
+
+    const conversation = await getConversationService(conversationId, userIds[0]);
 
     return resp.status(StatusCodes.OK).json(conversation);
   } catch (error) {

@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const { MessageModel } = require('../models/message.model');
 const { ConversationModel } = require('../models/conversation.model');
 const { updateLastMessage } = require('./conversation.service');
+const { messageNotificationType } = require('../constants');
 const createMessage = async (messageData) => {
   let messageSaved = await MessageModel.create(messageData);
   if (!messageSaved) {
@@ -44,6 +45,45 @@ const messagePopulate = async (id) => {
   return message;
 };
 
+const messageNotificationPopulate = async (id) => {
+  let message = await MessageModel.findById(id)
+    .populate({
+      path: 'sender',
+      select: 'name avatar',
+      model: 'UserModel',
+    })
+    .populate({
+      path: 'conversation',
+      select: 'name',
+      model: 'ConversationModel',
+    })
+    .populate({
+      path: 'notification.users',
+      select: 'name avatar',
+      model: 'UserModel',
+    })
+    .populate({
+      path: 'notification.conversations',
+      select: 'name isGroup users',
+      model: 'ConversationModel',
+    })
+    .populate({
+      path: 'notification.message',
+      select: 'sender messages files sticker statuses deleted',
+      model: 'MessageModel',
+      populate: {
+        path: 'sender',
+        select: 'name avatar',
+        model: 'UserModel',
+      },
+    });
+  if (!message) {
+    throw createHttpError.BadRequest('Something wrong, pls Try again later');
+  }
+  return message;
+};
+
+// TODO Không lấy message notification có type là REMOVE_USER, LEAVE_GROUP của chính mình
 const getConversationMessage = async (conversationId, messageId, userId) => {
   const filter = [{ conversation: conversationId }];
 
@@ -65,6 +105,12 @@ const getConversationMessage = async (conversationId, messageId, userId) => {
 
   if (messageId) filter.push({ _id: { $lt: messageId } });
   filter.push({ 'usersDeleted.user': { $nin: [userId] } });
+  // filter.push({
+  //   $and: [
+  //     { $or: [{ 'notification.type': 'REMOVE_USER' }, { 'notification.type': 'LEAVE_GROUP' }] },
+  //     { 'notification.users': userId },
+  //   ],
+  // });
 
   const message = await MessageModel.find({
     $and: filter,
@@ -90,6 +136,26 @@ const getConversationMessage = async (conversationId, messageId, userId) => {
           select: 'name',
           model: 'UserModel',
         },
+      },
+    })
+    .populate({
+      path: 'notification.users',
+      select: 'name avatar',
+      model: 'UserModel',
+    })
+    .populate({
+      path: 'notification.conversations',
+      select: 'name isGroup users',
+      model: 'ConversationModel',
+    })
+    .populate({
+      path: 'notification.message',
+      select: 'sender messages files sticker statuses deleted',
+      model: 'MessageModel',
+      populate: {
+        path: 'sender',
+        select: 'name avatar',
+        model: 'UserModel',
       },
     })
     .sort({ createdAt: -1 })
@@ -360,6 +426,78 @@ const getLastMessage = async ({ conversationId, userId }) => {
   }
 };
 
+const addMessageNotificationService = async ({
+  senderId,
+  userIds,
+  conversationId,
+  conversations,
+  messageId,
+  type,
+}) => {
+  try {
+    let message;
+    if (
+      [
+        messageNotificationType.REMOVE_USER,
+        messageNotificationType.ADD_USERS,
+        messageNotificationType.ADD_ADMIN,
+        messageNotificationType.REMOVE_ADMIN,
+        messageNotificationType.CHANGE_OWNER,
+      ].includes(type)
+    ) {
+      message = new MessageModel({
+        sender: senderId,
+        conversation: conversationId,
+        notification: {
+          users: userIds,
+          type,
+        },
+      });
+    } else if (
+      [
+        messageNotificationType.PUBLIC_GROUP,
+        messageNotificationType.PRIVATE_GROUP,
+        messageNotificationType.ACCEPT_FRIEND,
+        messageNotificationType.LEAVE_GROUP,
+      ].includes(type)
+    ) {
+      message = new MessageModel({
+        sender: senderId,
+        conversation: conversationId,
+        notification: {
+          type,
+        },
+      });
+    } else if ([messageNotificationType.INVITE_TO_GROUP].includes(type)) {
+      message = new MessageModel({
+        sender: senderId,
+        conversation: conversationId,
+        notification: {
+          type,
+          conversations,
+        },
+      });
+    } else if (
+      [messageNotificationType.PIN_MESSAGE, messageNotificationType.UNPIN_MESSAGE].includes(type)
+    ) {
+      message = new MessageModel({
+        sender: senderId,
+        conversation: conversationId,
+        notification: {
+          type,
+          message: messageId,
+        },
+      });
+    } else throw createHttpError.BadRequest('Type is not correct');
+
+    await message.save();
+
+    return message;
+  } catch (error) {
+    throw createHttpError.InternalServerError('Add message notification something wrong', error);
+  }
+};
+
 module.exports = {
   createMessage,
   messagePopulate,
@@ -372,4 +510,6 @@ module.exports = {
   reactForMessageService,
   forwardMessageService,
   getLastMessage,
+  addMessageNotificationService,
+  messageNotificationPopulate,
 };
