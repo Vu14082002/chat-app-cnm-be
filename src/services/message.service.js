@@ -11,12 +11,17 @@ const createMessage = async (messageData) => {
   }
   return messageSaved;
 };
-const messagePopulate = async (id) => {
-  let message = await MessageModel.findById(id)
+
+const getMessageDetailChain = ({ query = {} }) => {
+  return MessageModel.find(query)
+    .populate('sender', 'name avatar')
     .populate({
-      path: 'sender',
-      select: 'name avatar',
-      model: 'UserModel',
+      path: 'reply',
+      select: 'sender messages files sticker statuses deleted',
+      populate: {
+        path: 'sender',
+        select: 'name avatar',
+      },
     })
     .populate({
       path: 'conversation',
@@ -24,38 +29,9 @@ const messagePopulate = async (id) => {
       model: 'ConversationModel',
       populate: {
         path: 'users',
-        select: 'name avatar status',
-        model: 'UserModel',
-      },
-    })
-    .populate({
-      path: 'reply',
-      select: 'sender messages files sticker statuses deleted',
-      model: 'MessageModel',
-      populate: {
-        path: 'sender',
         select: 'name avatar',
         model: 'UserModel',
       },
-    })
-    .populate('location');
-  if (!message) {
-    throw createHttpError.BadRequest('Something wrong, pls Try again later');
-  }
-  return message;
-};
-
-const messageNotificationPopulate = async (id) => {
-  let message = await MessageModel.findById(id)
-    .populate({
-      path: 'sender',
-      select: 'name avatar',
-      model: 'UserModel',
-    })
-    .populate({
-      path: 'conversation',
-      select: 'name',
-      model: 'ConversationModel',
     })
     .populate({
       path: 'notification.users',
@@ -66,10 +42,15 @@ const messageNotificationPopulate = async (id) => {
       path: 'notification.conversations',
       select: 'name isGroup users',
       model: 'ConversationModel',
+      populate: {
+        path: 'users',
+        select: 'name avatar',
+        model: 'UserModel',
+      },
     })
     .populate({
       path: 'notification.message',
-      select: 'sender messages files sticker statuses deleted',
+      select: 'sender messages files sticker statuses deleted location',
       model: 'MessageModel',
       populate: {
         path: 'sender',
@@ -77,10 +58,22 @@ const messageNotificationPopulate = async (id) => {
         model: 'UserModel',
       },
     });
-  if (!message) {
+};
+
+const messagePopulate = async (id) => {
+  let message = await getMessageDetailChain({ query: { _id: id } });
+  if (!message?.length) {
     throw createHttpError.BadRequest('Something wrong, pls Try again later');
   }
-  return message;
+  return message[0];
+};
+
+const messageNotificationPopulate = async (id) => {
+  const messages = await getMessageDetailChain({ query: { _id: id } });
+
+  if (!messages?.length) throw createHttpError.BadRequest('Something wrong, pls Try again later');
+
+  return messages[0];
 };
 
 // TODO Không lấy message notification có type là REMOVE_USER, LEAVE_GROUP của chính mình
@@ -105,99 +98,30 @@ const getConversationMessage = async (conversationId, messageId, userId) => {
 
   if (messageId) filter.push({ _id: { $lt: messageId } });
   filter.push({ 'usersDeleted.user': { $nin: [userId] } });
-  // filter.push({
-  //   $and: [
-  //     { $or: [{ 'notification.type': 'REMOVE_USER' }, { 'notification.type': 'LEAVE_GROUP' }] },
-  //     { 'notification.users': userId },
-  //   ],
-  // });
-
-  const message = await MessageModel.find({
-    $and: filter,
+  const messages = await getMessageDetailChain({
+    query: {
+      $and: filter,
+    },
   })
-    .populate('sender', 'name avatar')
-    .populate('reply', 'sender messages files')
-    .populate({
-      path: 'reply',
-      populate: {
-        path: 'sender',
-        select: 'name avatar',
-      },
-    })
-    .populate({
-      path: 'conversation',
-      select: 'pinnedMessages _id ',
-      model: 'ConversationModel',
-      populate: {
-        path: 'pinnedMessages',
-        select: 'sender messages files sticker -_id',
-        populate: {
-          path: 'sender',
-          select: 'name',
-          model: 'UserModel',
-        },
-      },
-    })
-    .populate({
-      path: 'notification.users',
-      select: 'name avatar',
-      model: 'UserModel',
-    })
-    .populate({
-      path: 'notification.conversations',
-      select: 'name isGroup users',
-      model: 'ConversationModel',
-    })
-    .populate({
-      path: 'notification.message',
-      select: 'sender messages files sticker statuses deleted',
-      model: 'MessageModel',
-      populate: {
-        path: 'sender',
-        select: 'name avatar',
-        model: 'UserModel',
-      },
-    })
     .sort({ createdAt: -1 })
     .limit(process.env.MESSAGE_PER_PAGE);
-  if (!message) {
+
+  if (!messages) {
     throw createHttpError.NotFound('conversationId is not contain');
   }
-  return message;
+  return messages;
 };
 
 const getReplyMessages = async (conversationId, replyId, userId) => {
-  const messages = await MessageModel.find({
-    $and: [
-      { _id: { $gte: replyId } },
-      { conversation: conversationId },
-      { 'usersDeleted.user': { $nin: [userId] } },
-    ],
-  })
-    .populate('sender', 'name avatar')
-    .populate('reply', 'sender messages files')
-    .populate({
-      path: 'reply',
-      populate: {
-        path: 'sender',
-        select: 'name avatar',
-      },
-    })
-    .populate({
-      path: 'conversation',
-      select: 'pinnedMessages _id ',
-      model: 'ConversationModel',
-      populate: {
-        path: 'pinnedMessages',
-        select: 'sender messages files sticker -_id',
-        populate: {
-          path: 'sender',
-          select: 'name',
-          model: 'UserModel',
-        },
-      },
-    })
-    .sort({ createdAt: -1 });
+  const messages = await getMessageDetailChain({
+    query: {
+      $and: [
+        { _id: { $gte: replyId } },
+        { conversation: conversationId },
+        { 'usersDeleted.user': { $nin: [userId] } },
+      ],
+    },
+  }).sort({ createdAt: -1 });
 
   if (!messages) throw createHttpError.BadRequest('messageId is not contain');
 
@@ -475,6 +399,7 @@ const addMessageNotificationService = async ({
         notification: {
           type,
           conversations,
+          userIds,
         },
       });
     } else if (

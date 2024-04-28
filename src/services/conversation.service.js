@@ -2,6 +2,7 @@ const createHttpError = require('http-errors');
 const { ConversationModel } = require('../models/conversation.model');
 const { UserModel } = require('../models/user.model');
 const httpErrors = require('http-errors');
+const { MessageModel } = require('../models/message.model');
 
 const checkExistConversation = async (senderUserId, receiverUserId) => {
   let conversationList = await ConversationModel.findOne({
@@ -25,15 +26,6 @@ const checkExistConversation = async (senderUserId, receiverUserId) => {
     path: 'lastMessage.sender',
     select: 'name avatar status',
   });
-  // return conversationList[0];
-  // const commonGroupCount = await ConversationModel.calculateAmountGroup(
-  //   senderUserId,
-  //   receiverUserId
-  // );
-  // return {
-  //   conversationList,
-  //   commonGroupCount,
-  // };
   return conversationList;
 };
 
@@ -64,42 +56,80 @@ const getDetailConversations = async ({ query = {}, userId }) => {
     '-updatedAt',
   ]);
 
-  conversations = conversations.map((conversation) => {
+  conversations = conversations.reduce((acc, conversation) => {
+    if (conversation.deleted) return acc;
+
     const detail = conversation.details.find((detail) => detail.userId === userId);
-    if (!detail)
-      return {
+    if (detail) {
+      const result = {
+        ...conversation.toObject(),
+        lastMessage: detail.lastMessage,
+        unreadMessageCount: detail.unreadMessageCount,
+        deletedAt: detail.deletedAt,
+      };
+
+      delete result.details;
+      delete result.deletedAt;
+
+      return [...acc, result];
+    }
+    return [
+      ...acc,
+      {
         ...conversation.toObject(),
         unreadMessageCount: 0,
         lastMessage: null,
-      };
+      },
+    ];
+  }, []);
 
-    const result = {
-      ...conversation.toObject(),
-      lastMessage: detail.lastMessage,
-      unreadMessageCount: detail.unreadMessageCount,
-      deletedAt: detail.deletedAt,
-    };
-
-    delete result.details;
-    delete result.deletedAt;
-
-    return result;
-  });
-
-  conversations = await ConversationModel.populate(conversations, [
+  conversations = await MessageModel.populate(conversations, [
     {
       path: 'lastMessage',
     },
     {
-      path: 'lastMessage.sender',
-      select: 'name avatar',
-    },
-    {
       path: 'pinnedMessages',
+    },
+  ]);
+
+  conversations = await UserModel.populate(conversations, [
+    {
+      path: 'lastMessage.sender',
+      select: 'name avatar status',
+      model: 'UserModel',
     },
     {
       path: 'pinnedMessages.sender',
+      model: 'UserModel',
       select: 'name avatar',
+    },
+  ]);
+
+  conversations = await MessageModel.populate(conversations, [
+    {
+      path: 'lastMessage.notification.message',
+      select: 'sender messages files sticker statuses deleted location',
+      model: 'MessageModel',
+      populate: {
+        path: 'sender',
+        select: 'name avatar',
+        model: 'UserModel',
+      },
+    },
+    {
+      path: 'lastMessage.notification.users',
+      select: 'name avatar',
+      model: 'UserModel',
+    },
+    {
+      path: 'lastMessage.notification.conversations',
+      select: 'name isGroup users',
+      model: 'ConversationModel',
+      populate: {
+        path: 'users',
+        select: 'name avatar',
+        model: 'UserModel',
+      },
     },
   ]);
 
@@ -119,34 +149,7 @@ const getDetailConversations = async ({ query = {}, userId }) => {
       return b.lastMessage.updatedAt - a.lastMessage.updatedAt;
     }
   });
-  conversations = conversations.filter((conv) => !conv.deleted);
-  conversations = await UserModel.populate(
-    conversations,
-    {
-      path: 'lastMessage.sender',
-      select: 'name avatar status',
-    },
-    {
-      path: 'lastMessage.notification.users',
-      select: 'name avatar',
-      model: 'UserModel',
-    },
-    {
-      path: 'lastMessage.notification.conversations',
-      select: 'name isGroup users',
-      model: 'ConversationModel',
-    },
-    {
-      path: 'lastMessage.notification.message',
-      select: 'sender messages files sticker statuses deleted',
-      model: 'MessageModel',
-      populate: {
-        path: 'sender',
-        select: 'name avatar',
-        model: 'UserModel',
-      },
-    }
-  );
+
   return conversations;
 };
 
@@ -182,80 +185,18 @@ const getGroupsService = async (userId) => {
 
 const getConversationService = async (conversationId, userId = '') => {
   try {
-    let conversation = await ConversationModel.findById(conversationId).populate('users', [
-      '-password',
-      '-qrCode',
-      '-background',
-      '-dateOfBirth',
-      '-createdAt',
-      '-updatedAt',
-    ]);
+    const conversations = await getDetailConversations({
+      query: {
+        $and: [{ _id: conversationId }, { deleted: false }],
+      },
+      userId,
+    });
 
-    if (conversation.deleted === true) {
+    if (conversations.length === 0) {
       throw createHttpError.NotFound('Conversation not found');
     }
 
-    const detail = conversation.details.find((detail) => detail.userId === userId);
-    if (!detail)
-      return {
-        ...conversation.toObject(),
-        unreadMessageCount: 0,
-      };
-
-    const result = {
-      ...conversation.toObject(),
-      lastMessage: detail.lastMessage,
-      unreadMessageCount: detail.unreadMessageCount,
-      deletedAt: detail.deletedAt,
-    };
-
-    delete result.details;
-    delete result.deletedAt;
-
-    conversation = result;
-
-    conversation = await ConversationModel.populate(conversation, [
-      {
-        path: 'lastMessage',
-      },
-      {
-        path: 'lastMessage.sender',
-        select: 'name avatar',
-      },
-      {
-        path: 'pinnedMessages',
-      },
-      {
-        path: 'pinnedMessages.sender',
-        select: 'name avatar',
-      },
-      {
-        path: 'lastMessage.notification.users',
-        select: 'name avatar',
-        model: 'UserModel',
-      },
-      {
-        path: 'lastMessage.notification.conversations',
-        select: 'name isGroup users',
-        model: 'ConversationModel',
-      },
-      {
-        path: 'lastMessage.notification.message',
-        select: 'sender messages files sticker statuses deleted',
-        model: 'MessageModel',
-        populate: {
-          path: 'sender',
-          select: 'name avatar',
-          model: 'UserModel',
-        },
-      },
-    ]);
-
-    conversation = await UserModel.populate(conversation, {
-      path: 'lastMessage.sender',
-      select: 'name avatar status',
-    });
-    return conversation;
+    return conversations[0];
   } catch (error) {
     console.error(error);
     throw httpErrors.InternalServerError(`getListUserConversations from server error${error}`);
