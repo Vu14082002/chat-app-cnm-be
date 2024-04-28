@@ -1,4 +1,4 @@
-const messageNotificationType = require('./MessageNotificationType');
+const messageNotificationType = require('./messageNotificationType');
 
 module.exports = {
   messageNotificationType,
