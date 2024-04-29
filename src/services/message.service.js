@@ -399,7 +399,7 @@ const addMessageNotificationService = async ({
         notification: {
           type,
           conversations,
-          userIds,
+          users: userIds,
         },
       });
     } else if (

@@ -26,7 +26,7 @@ const findUserByContactOrNameRegex = async (keyword, userId) => {
           },
           { _id: { $ne: userId } },
         ],
-      }).select('name avatar'),
+      }).select('name avatar dateOfBirth gender background'),
       FriendshipModel.findById(userId),
       FriendRequestModel.find({
         sender_id: userId,
@@ -35,15 +35,6 @@ const findUserByContactOrNameRegex = async (keyword, userId) => {
         receiver_id: userId,
       }),
     ]);
-
-    // const userFind = await UserModel.find({
-    //   $and: [
-    //     {
-    //       $or: [{ _id: { $eq: keyword } }, { name: { $regex: keyword, $options: 'i' } }],
-    //     },
-    //     { _id: { $ne: userId } },
-    //   ],
-    // }).select('name avatar');
 
     // Lấy danh sách bạn bè của người dùng hiện tại
     // const user = await FriendshipModel.findById(userId);

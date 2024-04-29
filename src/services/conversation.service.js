@@ -133,6 +133,19 @@ const getDetailConversations = async ({ query = {}, userId }) => {
     },
   ]);
 
+  conversations = await ConversationModel.populate(conversations, [
+    {
+      path: 'lastMessage.conversation',
+      select: 'name isGroup users',
+      model: 'ConversationModel',
+      populate: {
+        path: 'users',
+        select: 'name avatar',
+        model: 'UserModel',
+      },
+    },
+  ]);
+
   // Sắp xếp danh sách cuộc trò chuyện dựa trên trường pinBy và updatedAt
   conversations.sort((a, b) => {
     const userAPinned = a.pinBy.includes(userId);
@@ -247,12 +260,10 @@ const updateConversationDetailsService = async ({
       conversation.details.forEach((detail) => {
         detail.lastMessage = lastMessageId;
 
-        if (type === 'ADD_MESSAGE') {
-          if (detail.userId !== senderId) {
-            detail.unreadMessageCount = detail.unreadMessageCount + 1;
-          } else {
-            detail.unreadMessageCount = 0;
-          }
+        if (detail.userId !== senderId) {
+          detail.unreadMessageCount = detail.unreadMessageCount + 1;
+        } else {
+          detail.unreadMessageCount = 0;
         }
       });
     } else if (type === 'GET_MESSAGE') {

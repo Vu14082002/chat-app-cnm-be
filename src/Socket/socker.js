@@ -3,7 +3,7 @@ const friendsByUser = {};
 
 const socketServer = (socket, io) => {
   socket.on('online', ({ userId, friendIds }) => {
-    if (!userId || !friendIds?.length) return;
+    if (!userId || !Array.isArray(friendIds)) return;
 
     socket.join(userId);
     // Kiểm tra xem người dùng đã tồn tại trong danh sách hay chưa
@@ -286,6 +286,15 @@ const socketServer = (socket, io) => {
     if (!conversations || !userId) return;
 
     socket.in(userId).emit('addToGroups', { conversations });
+  });
+
+  // Add notification message
+  socket.on('addNotificationMessage', ({ userIds, message }) => {
+    if (!userIds?.length || !message) return;
+
+    userIds.forEach((element) => {
+      socket.in(element).emit('addNotificationMessage', { message });
+    });
   });
 };
 module.exports = { socketServer };

@@ -302,6 +302,7 @@ const addMessageNotification = async (req, resp, next) => {
       lastMessageId: message._id,
       userId,
       type: 'ADD_MESSAGE_NOTIFICATION',
+      senderId: userId,
     })
       .then(() => console.log('Finish....'))
       .catch((err) => console.error(err));
