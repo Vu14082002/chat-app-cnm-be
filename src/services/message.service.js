@@ -423,6 +423,40 @@ const addMessageNotificationService = async ({
   }
 };
 
+const getAttachedFilesService = async (conversationId, userId) => {
+  try {
+    const files = await MessageModel.aggregate([
+      {
+        $match: {
+          conversation: new mongoose.Types.ObjectId(conversationId),
+          files: { $exists: true, $ne: [] },
+          deleted: '0',
+          usersDeleted: {
+            $not: {
+              $elemMatch: { user: userId },
+            },
+          },
+        },
+      },
+      {
+        $sort: { createdAt: -1 },
+      },
+      {
+        $unwind: '$files',
+      },
+      {
+        $replaceRoot: { newRoot: '$files' },
+      },
+    ]);
+
+    return files;
+  } catch (error) {
+    console.log(error);
+
+    throw createHttpError.InternalServerError('Get attached files something wrong', error);
+  }
+};
+
 module.exports = {
   createMessage,
   messagePopulate,
@@ -437,4 +471,5 @@ module.exports = {
   getLastMessage,
   addMessageNotificationService,
   messageNotificationPopulate,
+  getAttachedFilesService,
 };

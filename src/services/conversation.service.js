@@ -462,6 +462,23 @@ const removeAdminRole = async ({ conversationId, userId }) => {
   }
 };
 
+const getMutualGroupsService = async (userIds) => {
+  try {
+    const conversations = await getDetailConversations({
+      query: {
+        users: { $all: userIds },
+        isGroup: true,
+        deleted: false,
+      },
+      userId: userIds[0],
+    });
+
+    return conversations;
+  } catch (error) {
+    throw createHttpError.InternalServerError('Failed to get mutual groups', error);
+  }
+};
+
 module.exports = {
   checkExistConversation,
   createConversation,
@@ -479,4 +496,5 @@ module.exports = {
   removeAdminRole,
   leaveGroupService,
   updateConversationDetailsService,
+  getMutualGroupsService,
 };

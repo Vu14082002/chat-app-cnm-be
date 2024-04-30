@@ -15,6 +15,7 @@ const {
   getLastMessage,
   addMessageNotificationService,
   messageNotificationPopulate,
+  getAttachedFilesService,
 } = require('../services/message.service');
 const {
   updateLastMessage,
@@ -24,6 +25,7 @@ const { uploadToS3 } = require('../helpers/uploadToS3.helper');
 const { convertToBinary } = require('../helpers/converFile');
 const { checkValidImg } = require('../helpers/checkValidImg');
 const { checkMessageHelper } = require('../helpers/checkMessage');
+const { ConversationModel } = require('../models/conversation.model');
 const sendMessage = async (req, resp, next) => {
   try {
     const userId = req.user.userId;
@@ -313,6 +315,29 @@ const addMessageNotification = async (req, resp, next) => {
   }
 };
 
+const getAttachedFiles = async (req, resp, next) => {
+  try {
+    const conversationId = req.params.conversationId;
+    const userId = req.user.userId;
+
+    const isExist = await ConversationModel.findById(conversationId);
+
+    if (!isExist)
+      return resp.status(StatusCodes.NOT_FOUND).json({ message: 'Conversation not found' });
+
+    if (!isExist.users.includes(userId))
+      return resp
+        .status(StatusCodes.FORBIDDEN)
+        .json({ message: 'You are not in this conversation' });
+
+    const files = await getAttachedFilesService(conversationId, userId);
+
+    return resp.status(StatusCodes.OK).json(files);
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   sendMessage,
   getMessage,
@@ -324,4 +349,5 @@ module.exports = {
   reactForMessage,
   forwardMessage,
   addMessageNotification,
+  getAttachedFiles,
 };

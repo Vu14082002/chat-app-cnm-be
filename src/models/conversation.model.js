@@ -131,6 +131,7 @@ ConversationSchema.statics.calculateAmountGroup = async function (userId1, userI
     const count = await this.countDocuments({
       isGroup: true,
       users: { $all: [userId1, userId2] },
+      deleted: false,
     });
     return count;
   } catch (error) {

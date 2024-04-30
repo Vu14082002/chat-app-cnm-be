@@ -18,6 +18,7 @@ const {
   removeAdminRole,
   leaveGroupService,
   updateConversationDetailsService,
+  getMutualGroupsService,
 } = require('../services/conversation.service');
 const { findUserByIdService, isFriendsService } = require('../services/user.service');
 const { uploadToS3 } = require('../helpers/uploadToS3.helper');
@@ -347,6 +348,17 @@ const addToGroups = async (req, resp, next) => {
   }
 };
 
+const getMutualGroups = async (req, resp, next) => {
+  try {
+    const userId = req.user.userId;
+    const { userId: targetUserId } = req.query;
+    const conversations = await getMutualGroupsService([userId, targetUserId]);
+    return resp.status(StatusCodes.OK).json(conversations);
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   openConversation,
   getConversations,
@@ -361,4 +373,5 @@ module.exports = {
   leaveGroup,
   deleteConversationIndividual,
   addToGroups,
+  getMutualGroups,
 };

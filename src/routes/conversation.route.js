@@ -15,6 +15,7 @@ const {
   leaveGroup,
   deleteConversationIndividual,
   addToGroups,
+  getMutualGroups,
 } = require('../controllers/conversation.controllers');
 const { upload } = require('../configs/multer.config');
 
@@ -22,6 +23,7 @@ conversationRouter
   .route('/group')
   .post(trimRequest.all, checkAuthorized, upload.single('avatar'), createConversationGroup);
 conversationRouter.route('/group').get(checkAuthorized, getGroups);
+conversationRouter.route('/group/mutual').get(checkAuthorized, getMutualGroups);
 conversationRouter.route('/group/:conversationId').delete(checkAuthorized, deleteConversation);
 conversationRouter.route('/group/:conversationId/users/leave').post(checkAuthorized, leaveGroup);
 conversationRouter.route('/group/:conversationId/users').post(checkAuthorized, addUser);

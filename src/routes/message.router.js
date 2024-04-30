@@ -13,12 +13,14 @@ const {
   unPinMessage,
   forwardMessage,
   addMessageNotification,
+  getAttachedFiles,
 } = require('../controllers/message.controllers');
 // userRouter.route('/updateAvatar').post(checkAuthorized, upload.single('avatar'), updateAvatar);
 const { upload } = require('../configs/multer.config');
 messageRouter.route('/notification').post(trimRequest.all, checkAuthorized, addMessageNotification);
 messageRouter.route('/').post(trimRequest.all, checkAuthorized, upload.array('files'), sendMessage);
 // messageRouter.route('/reply/:replyId').get(trimRequest.all, checkAuthorized, getReplyMessages);
+messageRouter.route('/:conversationId/attached-files').get(checkAuthorized, getAttachedFiles);
 messageRouter.route('/:conversationId').get(trimRequest.all, checkAuthorized, getMessage);
 messageRouter
   .route('/:conversationId/reply/:messageId')
