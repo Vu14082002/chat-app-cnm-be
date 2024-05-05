@@ -296,5 +296,45 @@ const socketServer = (socket, io) => {
       socket.in(element).emit('addNotificationMessage', { message });
     });
   });
+
+  // Call....
+  socket.on('call', ({ sender, users, type, _id }) => {
+    if (!users?.length) return;
+
+    users.forEach((user) => socket.in(user._id).emit('call', { sender, users, type, _id }));
+  });
+
+  socket.on('acceptCall', ({ receiver, users, _id }) => {
+    if (!receiver || !users?.length) return;
+
+    users.forEach((user) => socket.in(user._id).emit('acceptCall', { receiver, _id }));
+  });
+
+  socket.on('rejectCall', ({ users, sender, _id }) => {
+    if (!users?.length) return;
+
+    users.forEach((user) => socket.in(user._id).emit('rejectCall', { sender, _id }));
+  });
+
+  socket.on('peerId', ({ peerId, fromUserId, toUserIds }) => {
+    if (!toUserIds?.length) return;
+
+    toUserIds.forEach((toUserId) => socket.in(toUserId).emit('peerId', { peerId, fromUserId }));
+  });
+
+  socket.on('endCall', ({ users, sender, _id }) => {
+    if (!users?.length) return;
+
+    users.forEach((user) => socket.in(user._id).emit('endCall', { sender, _id }));
+  });
+
+  socket.on('toggleMediaStreamConstraints', ({ users, sender, _id, video, audio }) => {
+    if (!users?.length) return;
+
+    users.forEach((user) =>
+      socket.in(user._id).emit('toggleMediaStreamConstraints', { sender, _id, video, audio })
+    );
+  });
 };
+
 module.exports = { socketServer };

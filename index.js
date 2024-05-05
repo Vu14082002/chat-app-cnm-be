@@ -1,4 +1,6 @@
 // import
+const httpErrors = require('http-errors');
+const { ExpressPeerServer } = require('peer');
 const { socketServer } = require('./src/Socket/socker');
 const { app } = require('./src/app');
 const logger = require('./src/logger');
@@ -20,4 +22,17 @@ const io = new Server(server, {
 io.on('connection', (socket) => {
   logger.info('socket io connect success');
   socketServer(socket, io);
+});
+
+// Peer
+const peerServer = ExpressPeerServer(server, {
+  key: 'peerjs',
+  debug: true,
+});
+
+app.use('/peerjs', peerServer);
+
+// Error
+app.use(async (req, res, next) => {
+  next(httpErrors.NotFound(` 'SORRY' we couldn't find resource `));
 });
