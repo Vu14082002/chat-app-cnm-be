@@ -25,29 +25,28 @@ const addPhonebookService = async ({ userId, phonebook }) => {
     acc[item.email] = item.name;
     return acc;
   }, {});
-  console.log('🚀 ~ addPhonebookService ~ phonebook:', map);
   const phonebookEmails = Object.keys(map);
-  console.log('🚀 ~ addPhonebookService ~ phonebookEmails:', phonebookEmails);
 
   const users = await UserModel.find({ _id: { $in: phonebookEmails } });
-  console.log('🚀 ~ addPhonebookService ~ users:', users);
 
   const insertUsers = users.map((user) => ({
     userId,
     contactId: user._id,
     name: map[user._id],
   }));
-  console.log('🚀 ~ insertUsers ~ insertUsers:', insertUsers);
+
+  const insertMany = new Promise((resolve) =>
+    PhonebookModel.insertMany(insertUsers, {
+      ordered: false,
+    })
+      .then(resolve)
+      .catch(resolve)
+  );
 
   const [friendship] = await Promise.all([
     FriendshipModel.findById(userId),
-    new Promise((resolve) =>
-      PhonebookModel.insertMany(insertUsers, {
-        ordered: false,
-      })
-        .then(resolve)
-        .catch(resolve)
-    ),
+    insertMany,
+    PhonebookModel.updateOne({ userId }, {}),
   ]);
 
   const result = phonebookDetail({
@@ -63,15 +62,7 @@ const addPhonebookService = async ({ userId, phonebook }) => {
 };
 
 const getPhonebookService = async ({ userId }) => {
-  const phonebook = await PhonebookModel.find(
-    { userId },
-    {},
-    {
-      sort: {
-        updatedAt: -1,
-      },
-    }
-  );
+  const phonebook = await PhonebookModel.find({ userId });
 
   const lastUpdated = phonebook[0]?.updatedAt;
   if (!lastUpdated)
