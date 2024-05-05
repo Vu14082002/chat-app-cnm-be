@@ -49,12 +49,8 @@ app.use(
     customCssUrl: 'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.10.5/swagger-ui.min.css',
   })
 );
-app.use('/api/v1', routes);
 
-// Error
-app.use(async (req, res, next) => {
-  next(httpErrors.NotFound(` 'SORRY' we couldn't find resource `));
-});
+app.use('/api/v1', routes);
 
 app.use(async (err, req, res, next) => {
   res.status(err.status || 500);

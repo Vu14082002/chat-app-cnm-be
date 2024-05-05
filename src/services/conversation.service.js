@@ -249,7 +249,7 @@ const updateConversationDetailsService = async ({
         if (!conversation.details.find((detail) => detail.userId === userId)) {
           conversation.details.push({
             userId,
-            lastMessage: '',
+            lastMessage: null,
             unreadMessageCount: 0,
           });
         }
