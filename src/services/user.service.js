@@ -175,18 +175,20 @@ const acceptFriendRequestService = async (userId, senderId) => {
     if (!existingRequest) {
       return { status: false, message: `Người dùng ${senderId} chưa gửi yêu cầu kết bạn tới bạn` };
     }
-    //  add A to B
-    await FriendshipModel.findOneAndUpdate(
-      { _id: userId },
-      { $addToSet: { friends: senderId } },
-      { upsert: true }
-    );
-    // Add B to A
-    await FriendshipModel.findOneAndUpdate(
-      { _id: senderId },
-      { $addToSet: { friends: userId } },
-      { upsert: true }
-    );
+
+    await Promise.all([
+      FriendshipModel.findOneAndUpdate(
+        { _id: userId },
+        { $addToSet: { friends: senderId } },
+        { upsert: true }
+      ),
+      FriendshipModel.findOneAndUpdate(
+        { _id: senderId },
+        { $addToSet: { friends: userId } },
+        { upsert: true }
+      ),
+    ]);
+
     Promise.all([
       sendNotification(senderId, userId, `Bạn và ${userId} đã trở thành bạn bè`),
       markNotificationAsRead(userId, senderId),
