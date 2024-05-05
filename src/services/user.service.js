@@ -243,18 +243,20 @@ const rejectFriendRequestService = async (userId, friendId) => {};
 
 const deleteFriendById = async (userId, friendId) => {
   try {
-    const user = await FriendshipModel.findOneAndUpdate(
-      { _id: userId, friends: friendId },
-      { $pull: { friends: friendId } },
-      { new: true }
-    );
+    const [user] = await Promise.all([
+      FriendshipModel.findOneAndUpdate(
+        { _id: userId, friends: friendId },
+        { $pull: { friends: friendId } },
+        { new: true }
+      ),
+      FriendshipModel.findOneAndUpdate(
+        { _id: friendId, friends: userId },
+        { $pull: { friends: userId } },
+        { new: true }
+      ),
+    ]);
 
     if (!user) return { success: false, message: 'User or friend not found' };
-
-    await Promise.all([
-      UserModel.updateOne({ _id: friendId }, { $pull: { friends: userId } }),
-      UserModel.updateOne({ _id: userId }, { $pull: { friends: friendId } }),
-    ]);
 
     return { success: true, message: 'Friend deleted successfully' };
   } catch (error) {

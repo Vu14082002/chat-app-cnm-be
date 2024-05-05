@@ -10,7 +10,7 @@ const phonebookDetail = ({
   sendRequestAddFriend,
   waitResponseAddFriend,
 }) => {
-  const friendIds = friendship.friends;
+  const friendIds = friendship?.friends || [];
   const map = phonebook.reduce((acc, user) => {
     acc[user.contactId] = user.name;
     return acc;
@@ -45,11 +45,16 @@ const addPhonebookService = async ({ userId, phonebook }) => {
 
   const users = await UserModel.find({ _id: { $in: phonebookEmails } });
 
-  const insertUsers = users.map((user) => ({
-    userId,
-    contactId: user._id,
-    name: map[user._id],
-  }));
+  const insertUsers = users.reduce((acc, user) => {
+    if (user._id === userId) return acc;
+
+    acc.push({
+      userId,
+      contactId: user._id,
+      name: map[user._id],
+    });
+    return acc;
+  }, []);
 
   const insertMany = new Promise((resolve) =>
     PhonebookModel.insertMany(insertUsers, {
