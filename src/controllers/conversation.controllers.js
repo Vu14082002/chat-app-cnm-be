@@ -22,7 +22,8 @@ const {
 } = require('../services/conversation.service');
 const { findUserByIdService, isFriendsService } = require('../services/user.service');
 const { uploadToS3 } = require('../helpers/uploadToS3.helper');
-const { getLastMessage } = require('../services/message.service');
+const { getLastMessage, addMessageNotificationService } = require('../services/message.service');
+const { messageNotificationType } = require('../constants');
 
 const openConversation = async (req, resp, next) => {
   try {
@@ -120,12 +121,37 @@ const createConversationGroup = async (req, resp, next) => {
       admin: userId,
     };
     const conversationSaved = await createConversation(conversationData);
-    const populateConversationData = await populateConversation(
-      conversationSaved._id,
-      'users',
-      '-password'
-    );
-    return resp.status(StatusCodes.CREATED).json(populateConversationData);
+    const [populateConversationData, message] = await Promise.all([
+      getConversationService(conversationSaved._id),
+      addMessageNotificationService({
+        conversationId: conversationSaved._id,
+        senderId: userId,
+        type: messageNotificationType.CREATE_GROUP,
+        userIds: userArray.slice(0, -1),
+      }),
+    ]);
+
+    updateConversationDetailsService({
+      conversationId: conversationSaved._id,
+      type: 'ADD_MESSAGE',
+      lastMessageId: message._id,
+      senderId: userId,
+    })
+      .then()
+      .catch((err) => console.error(err));
+
+    const conversationObject = populateConversationData;
+    const messageObject = {
+      ...message.toObject(),
+    };
+
+    messageObject.notification.users = conversationObject.users.slice(0, -1);
+    messageObject.sender = conversationObject.users.at(-1);
+
+    return resp.status(StatusCodes.CREATED).json({
+      ...conversationObject,
+      lastMessage: messageObject,
+    });
   } catch (error) {
     next(error);
   }

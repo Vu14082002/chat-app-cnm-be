@@ -367,6 +367,7 @@ const addMessageNotificationService = async ({
         messageNotificationType.ADD_ADMIN,
         messageNotificationType.REMOVE_ADMIN,
         messageNotificationType.CHANGE_OWNER,
+        messageNotificationType.CREATE_GROUP,
       ].includes(type)
     ) {
       message = new MessageModel({
