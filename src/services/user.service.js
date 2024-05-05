@@ -247,11 +247,12 @@ const deleteFriendById = async (userId, friendId) => {
       { new: true }
     );
 
-    if (!user) {
-      return { success: false, message: 'User or friend not found' };
-    }
+    if (!user) return { success: false, message: 'User or friend not found' };
 
-    await UserModel.updateOne({ _id: friendId }, { $pull: { friends: userId } });
+    await Promise.all([
+      UserModel.updateOne({ _id: friendId }, { $pull: { friends: userId } }),
+      UserModel.updateOne({ _id: userId }, { $pull: { friends: friendId } }),
+    ]);
 
     return { success: true, message: 'Friend deleted successfully' };
   } catch (error) {

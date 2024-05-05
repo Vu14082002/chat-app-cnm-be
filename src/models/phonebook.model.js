@@ -23,10 +23,12 @@ const PhonebookSchema = mongoose.Schema(
   },
 
   {
-    collection: 'conversations',
+    collection: 'phonebook',
     timestamps: true,
   }
 );
+
+PhonebookSchema.index({ userId: 1, contactId: 1 }, { unique: true });
 
 const PhonebookModel =
   mongoose.model.PhonebookModel || mongoose.model('PhonebookModel', PhonebookSchema);
