@@ -24,14 +24,6 @@ io.on('connection', (socket) => {
   socketServer(socket, io);
 });
 
-// Peer
-const peerServer = ExpressPeerServer(server, {
-  key: 'peerjs',
-  debug: true,
-});
-
-app.use('/peerjs', peerServer);
-
 // Error
 app.use(async (req, res, next) => {
   next(httpErrors.NotFound(` 'SORRY' we couldn't find resource `));

@@ -44,7 +44,6 @@
           "openai": "^4.33.0",
           "os": "^0.1.2",
           "otp-generator": "^4.0.1",
-          "peer": "^1.0.2",
           "qrcode": "^1.5.3",
           "socket.io": "^4.7.5",
           "swagger-jsdoc": "^6.2.8",

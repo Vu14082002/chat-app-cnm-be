@@ -1,5 +1,6 @@
 let userOnline = [];
 const friendsByUser = {};
+const calls = {};
 
 const socketServer = (socket, io) => {
   socket.on('online', ({ userId, friendIds }) => {
@@ -15,7 +16,6 @@ const socketServer = (socket, io) => {
       // Nếu người dùng đã tồn tại, cập nhật lại socketId
       userOnline[existingUserIndex].socketId = socket.id;
     }
-    console.log(userOnline);
 
     friendsByUser[userId] = friendIds;
 
@@ -53,7 +53,6 @@ const socketServer = (socket, io) => {
   // tạo room socket và join vào
   socket.on('openConversation', ({ conversation, user }) => {
     socket.join(conversation._id);
-    console.log(socket.adapter.rooms);
 
     conversation.users.forEach((element) => {
       // ko gui lai tin nhan cho nguoi da gui
@@ -125,7 +124,6 @@ const socketServer = (socket, io) => {
     if (friend) {
       io.to(friend.socketId).emit('receivedAddFriend', `${userSend.userId} gửi lời mời kết bạn`);
     } else {
-      console.log('false');
     }
   });
   socket.on('acceptFriend', (message) => {
@@ -137,7 +135,6 @@ const socketServer = (socket, io) => {
         `${userSend.userId} đã chấp thuận lời mời kết ban`
       );
     } else {
-      console.log('false');
     }
   });
   // rời nhóm
@@ -302,38 +299,82 @@ const socketServer = (socket, io) => {
     if (!users?.length) return;
 
     users.forEach((user) => socket.in(user._id).emit('call', { sender, users, type, _id }));
+
+    const id = setTimeout(() => {
+      const call = calls[_id];
+      if (!call) return;
+
+      const { users, acceptUserIds, rejectUserIds, endedUserIds, busyUserIds } = call;
+      const missedUserIds = users.reduce((missedUserIds, user) => {
+        if (
+          !acceptUserIds.includes(user._id) &&
+          !rejectUserIds.includes(user._id) &&
+          !endedUserIds.includes(user._id) &&
+          !busyUserIds.includes(user._id)
+        )
+          missedUserIds.push(user._id);
+        return missedUserIds;
+      }, []);
+
+      call.missedUserIds = missedUserIds;
+      users.forEach((user) => io.in(user._id).emit('missedCall', { missedUserIds, _id }));
+    }, 30000);
+
+    calls[_id] = {
+      sender,
+      users,
+      type,
+      acceptUserIds: [sender._id],
+      rejectUserIds: [],
+      endedUserIds: [],
+      busyUserIds: [],
+      missedUserIds: [],
+      timeoutId: id,
+    };
   });
 
-  socket.on('acceptCall', ({ receiver, users, _id }) => {
-    if (!receiver || !users?.length) return;
+  socket.on('acceptCall', ({ receiver, _id }) => {
+    if (!receiver || !calls[_id]) return;
 
-    users.forEach((user) => socket.in(user._id).emit('acceptCall', { receiver, _id }));
+    calls[_id].users.forEach((user) => socket.in(user._id).emit('acceptCall', { receiver, _id }));
+    if (!calls[_id]) return;
+    calls[_id].acceptUserIds.push(receiver._id);
   });
 
-  socket.on('rejectCall', ({ users, sender, _id }) => {
-    if (!users?.length) return;
+  socket.on('rejectCall', ({ sender, _id }) => {
+    if (!calls[_id]) return;
 
-    users.forEach((user) => socket.in(user._id).emit('rejectCall', { sender, _id }));
-  });
-
-  socket.on('peerId', ({ peerId, fromUserId, toUserIds }) => {
-    if (!toUserIds?.length) return;
-
-    toUserIds.forEach((toUserId) => socket.in(toUserId).emit('peerId', { peerId, fromUserId }));
-  });
-
-  socket.on('endCall', ({ users, sender, _id }) => {
-    if (!users?.length) return;
-
-    users.forEach((user) => socket.in(user._id).emit('endCall', { sender, _id }));
-  });
-
-  socket.on('toggleMediaStreamConstraints', ({ users, sender, _id, video, audio }) => {
-    if (!users?.length) return;
-
-    users.forEach((user) =>
-      socket.in(user._id).emit('toggleMediaStreamConstraints', { sender, _id, video, audio })
+    calls[_id].users.forEach((user, _index, users) =>
+      socket.in(user._id).emit('rejectCall', { sender, _id, users })
     );
+    calls[_id].rejectUserIds.push(sender._id);
+  });
+
+  socket.on('busyCall', ({ sender, _id }) => {
+    const call = calls[_id];
+
+    if (!call) return;
+
+    call.users.forEach((user) => socket.in(user._id).emit('busyCall', { sender, _id }));
+    call.busyUserIds.push(sender._id);
+  });
+
+  socket.on('endCall', ({ sender, _id }) => {
+    const call = calls[_id];
+
+    if (!call) return;
+
+    call.users.forEach((user, _index, users) =>
+      socket.in(user._id).emit('endCall', { sender, _id, users })
+    );
+    call.endedUserIds.push(sender._id);
+    call.acceptUserIds = call.acceptUserIds.filter((id) => id !== sender._id);
+
+    if (call.acceptUserIds.length === 0) {
+      clearTimeout(call.timeoutId);
+
+      delete call;
+    }
   });
 };
 
