@@ -1,6 +1,5 @@
 // import
 const httpErrors = require('http-errors');
-const { ExpressPeerServer } = require('peer');
 const { socketServer } = require('./src/Socket/socker');
 const { app } = require('./src/app');
 const logger = require('./src/logger');
