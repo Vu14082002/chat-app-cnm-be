@@ -355,7 +355,10 @@ const socketServer = (socket, io) => {
 
     if (!call) return;
 
-    call.users.forEach((user) => socket.in(user._id).emit('busyCall', { sender, _id }));
+    call.users.forEach((user) => {
+      if (user._id === sender._id) return;
+      socket.in(user._id).emit('busyCall', { sender, _id });
+    });
     call.busyUserIds.push(sender._id);
   });
 
