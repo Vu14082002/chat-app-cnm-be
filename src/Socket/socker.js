@@ -21,10 +21,8 @@ const socketServer = (socket, io) => {
 
     const onlineIds = [];
     friendIds.forEach((friendId) => {
-      if (friendsByUser[friendId]) {
-        socket.in(friendId).emit('userOnline', userId);
-        onlineIds.push(friendId);
-      }
+      socket.in(friendId).emit('userOnline', userId);
+      onlineIds.push(friendId);
     });
     io.in(userId).emit('usersOnline', onlineIds);
   });
@@ -295,10 +293,12 @@ const socketServer = (socket, io) => {
   });
 
   // Call....
-  socket.on('call', ({ sender, users, type, _id }) => {
+  socket.on('call', ({ sender, users, type, _id, conversationName }) => {
     if (!users?.length) return;
 
-    users.forEach((user) => socket.in(user._id).emit('call', { sender, users, type, _id }));
+    users.forEach((user) =>
+      socket.in(user._id).emit('call', { sender, users, type, _id, conversationName })
+    );
 
     const id = setTimeout(() => {
       const call = calls[_id];
@@ -330,6 +330,7 @@ const socketServer = (socket, io) => {
       busyUserIds: [],
       missedUserIds: [],
       timeoutId: id,
+      conversationName,
     };
   });
 
