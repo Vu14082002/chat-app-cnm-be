@@ -293,11 +293,11 @@ const socketServer = (socket, io) => {
   });
 
   // Call....
-  socket.on('call', ({ sender, users, type, _id, conversationName }) => {
+  socket.on('call', ({ sender, users, type, _id, conversationName, isGroup }) => {
     if (!users?.length) return;
 
     users.forEach((user) =>
-      socket.in(user._id).emit('call', { sender, users, type, _id, conversationName })
+      socket.in(user._id).emit('call', { sender, users, type, _id, conversationName, isGroup })
     );
 
     const id = setTimeout(() => {
@@ -317,7 +317,9 @@ const socketServer = (socket, io) => {
       }, []);
 
       call.missedUserIds = missedUserIds;
-      users.forEach((user) => io.in(user._id).emit('missedCall', { missedUserIds, _id }));
+      users.forEach((user) =>
+        io.in(user._id).emit('missedCall', { missedUserIds, _id, conversationName })
+      );
     }, 30000);
 
     calls[_id] = {
@@ -331,6 +333,7 @@ const socketServer = (socket, io) => {
       missedUserIds: [],
       timeoutId: id,
       conversationName,
+      isGroup,
     };
   });
 
