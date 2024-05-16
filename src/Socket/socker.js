@@ -317,8 +317,16 @@ const socketServer = (socket, io) => {
       }, []);
 
       call.missedUserIds = missedUserIds;
+
+      missedUserIds.forEach((missedUserId) => {
+        io.in(missedUserId).emit('missedCall', {
+          _id,
+          conversationName: isGroup ? conversationName : sender.name,
+        });
+      });
+
       users.forEach((user) =>
-        io.in(user._id).emit('missedCall', { missedUserIds, _id, conversationName })
+        io.in(user._id).emit('missedCallToAccepter', { missedUserIds, _id, conversationName })
       );
     }, 30000);
 
