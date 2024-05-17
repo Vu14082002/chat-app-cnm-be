@@ -21,6 +21,8 @@ const socketServer = (socket, io) => {
 
     const onlineIds = [];
     friendIds.forEach((friendId) => {
+      if (!friendsByUser[friendId]) return;
+
       socket.in(friendId).emit('userOnline', userId);
       onlineIds.push(friendId);
     });
