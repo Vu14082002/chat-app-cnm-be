@@ -22,7 +22,10 @@ const findUserByContactOrNameRegex = async (keyword, userId) => {
       UserModel.find({
         $and: [
           {
-            $or: [{ _id: { $eq: keyword } }, { name: { $regex: keyword, $options: 'i' } }],
+            $or: [
+              { _id: { $regex: new RegExp(`^${keyword}$`), $options: 'i' } },
+              { name: { $regex: keyword, $options: 'i' } },
+            ],
           },
           { _id: { $ne: userId } },
         ],

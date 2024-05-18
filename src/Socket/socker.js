@@ -56,9 +56,7 @@ const socketServer = (socket, io) => {
 
     conversation.users.forEach((element) => {
       // ko gui lai tin nhan cho nguoi da gui
-      if (element._id === user._id) {
-        return;
-      }
+      if (element._id === user._id) return;
       //  chi nhung nguoi co trong room moi dc nhan chat
       socket.in(element._id).emit('openConversation', conversation);
     });
@@ -136,19 +134,6 @@ const socketServer = (socket, io) => {
       );
     } else {
     }
-  });
-  // rời nhóm
-  socket.on('sendMessage', (message) => {
-    const conversation = message.conversation;
-    if (!conversation) {
-      return;
-    }
-    conversation.users.forEach((element) => {
-      if (element._id === message.sender._id) {
-        return;
-      }
-      socket.in(element._id).emit('receivedMessage', message);
-    });
   });
   // typing
   socket.on('typing', ({ conversation, userId }) => {
