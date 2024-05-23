@@ -281,21 +281,17 @@ const reactForMessageService = async (react, userId, messageId) => {
 const forwardMessageService = async (userId, messageId, conversationIds) => {
   const session = await mongoose.startSession({ readPreference: 'primary' });
   session.startTransaction();
-  console.log(conversationIds);
   try {
     const message = await MessageModel.findById(messageId).session(session);
-    if (!message) {
-      throw createHttpError.NotFound(`Message ${messageId} not found`);
-    }
+    if (!message) throw createHttpError.NotFound(`Message ${messageId} not found`);
 
     const messageSend = [];
 
     await Promise.all(
       conversationIds.map(async (conversationId) => {
         const conversation = await ConversationModel.findById(conversationId);
-        if (!conversation) {
+        if (!conversation)
           throw createHttpError.NotFound(`Conversation ${conversationId} not found`);
-        }
         const forwardedMessage = await MessageModel.create({
           sender: userId,
           messages: message.messages,
@@ -303,13 +299,7 @@ const forwardMessageService = async (userId, messageId, conversationIds) => {
           files: message.files,
           location: message.location,
           sticker: message.sticker,
-          statuses: message.statuses,
-          // deleted: message.deleted,
-          // usersDeleted: message.usersDeleted,
         });
-        // const messageSave = await forwardedMessage.save({ session });
-        // console.log(messageSave);
-        // messageSend.push(messageSave);
         messageSend.push(forwardedMessage);
         await updateLastMessage(conversationId, forwardedMessage);
       })
@@ -320,9 +310,7 @@ const forwardMessageService = async (userId, messageId, conversationIds) => {
   } catch (error) {
     await session.abortTransaction();
     session.endSession();
-    if (error instanceof createHttpError.NotFound) {
-      throw error;
-    }
+    if (error instanceof createHttpError.NotFound) throw error;
     throw createHttpError.InternalServerError(`forwardMessageService error: ${error.message}`);
   }
 };

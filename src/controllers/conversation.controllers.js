@@ -29,15 +29,13 @@ const openConversation = async (req, resp, next) => {
   try {
     const senderUserId = req.user.userId;
     const receiverUserId = req.body.receiverUserId;
-    if (!receiverUserId) {
-      logger.error('Please Provide user to begin conversation');
+    if (!receiverUserId)
       throw createHttpError.BadGateway('Please Provide user_id to begin conversation');
-    }
+
     // check conversation is exsist
     const resultCheck = await checkExistConversation(senderUserId, receiverUserId);
-    if (resultCheck) {
-      return resp.status(StatusCodes.OK).json(resultCheck);
-    }
+    if (resultCheck) return resp.status(StatusCodes.OK).json(resultCheck);
+
     let userReceived = await findUserByIdService(receiverUserId);
     let conversationData = {
       name: userReceived.name,
@@ -64,18 +62,16 @@ const createConversationGroup = async (req, resp, next) => {
     const { avatar, name, users: u } = req.body;
     const users = Array.isArray(u) ? u : JSON.parse(u);
     const checkFriend = await isFriendsService(users, userId);
-    if (!checkFriend) {
+    if (!checkFriend)
       return resp
         .status(StatusCodes.BAD_REQUEST)
         .json({ message: 'You are not friend with all user in group' });
-    }
+
     const avatarFile = req.file;
 
     let picture = avatar;
-    if (!users) {
-      logger.error('Please Provide user to begin conversation');
+    if (!users)
       throw createHttpError.BadGateway('Please Provide name and userIds to begin conversation');
-    }
 
     if (avatarFile) {
       const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp'];
@@ -220,15 +216,6 @@ const pinConversation = async (req, resp, next) => {
     next(error);
   }
 };
-// const renameConVersation = async(req = request, resp = response) => {
-//     try {
-//         const userId = req.user.userId;
-//         const conversations = await renameConVersationService(userId);
-//         resp.status(httpStatusCodes.StatusCodes.OK).json(conversations);
-//     } catch (error) {
-//         throw createHttpError.BadRequest('Some thing wrong, Try agian');
-//     }
-// };
 
 // FIXME Kiểm tra user có quyền giải tán hay không? (Field admin)
 const deleteConversation = async (req, resp, next) => {

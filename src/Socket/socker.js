@@ -281,6 +281,7 @@ const socketServer = (socket, io) => {
 
   // Call....
   socket.on('call', ({ sender, users, type, _id, conversationName, isGroup }) => {
+    console.log('🚀 ~ socket.on ~ users:', users);
     if (!users?.length) return;
 
     users.forEach((user) =>
