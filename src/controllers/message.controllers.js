@@ -56,8 +56,8 @@ const sendMessage = async (req, resp, next) => {
           const fileExtension = uploadedFile.split('.').pop().toLowerCase();
           if (imageExtensions.includes(fileExtension)) {
             //FIXME: tắt check img khi nao dung thì bật lên
-            // const checkImg = await checkValidImg(uploadedFile);
-            const checkImg = true;
+            const checkImg = await checkValidImg(uploadedFile);
+            // const checkImg = true;
             if (!checkImg) {
               invalidFiles.push(file.originalname);
             } else {
@@ -82,22 +82,22 @@ const sendMessage = async (req, resp, next) => {
 
     let checkValidMessage = true;
     // FIXME: tắt  check chat message
-    // if (messages?.length > 0) {
-    //   for (const message of messages) {
-    //     if (message.type === 'text') {
-    //       invalidMessageContent.push(message.content);
-    //     }
-    //   }
-    //   const messageContent = invalidMessageContent.join(' ');
-    //   checkValidMessage = await checkMessageHelper(messageContent);
-    //   if (!checkValidMessage) {
-    //     if (!sticker && !files.length && !location) {
-    //       return resp
-    //         .status(StatusCodes.OK)
-    //         .json({ message: [], invalidFiles, failedUploads: [], invalidMessage: true });
-    //     }
-    //   }
-    // }
+    if (messages?.length > 0) {
+      for (const message of messages) {
+        if (message.type === 'text') {
+          invalidMessageContent.push(message.content);
+        }
+      }
+      const messageContent = invalidMessageContent.join(' ');
+      checkValidMessage = await checkMessageHelper(messageContent);
+      if (!checkValidMessage) {
+        if (!sticker && !files.length && !location) {
+          return resp
+            .status(StatusCodes.OK)
+            .json({ message: [], invalidFiles, failedUploads: [], invalidMessage: true });
+        }
+      }
+    }
 
     const messageData = {
       sender: userId,
