@@ -418,8 +418,8 @@ const getAttachedFilesService = async (conversationId, userId) => {
       {
         $match: {
           conversation: new mongoose.Types.ObjectId(conversationId),
-          files: { $exists: true, $ne: [] },
           deleted: '0',
+          files: { $exists: true, $ne: [] },
           usersDeleted: {
             $not: {
               $elemMatch: { user: userId },

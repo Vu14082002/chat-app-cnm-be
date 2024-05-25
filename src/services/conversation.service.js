@@ -170,7 +170,7 @@ const getListUserConversations = async (userId) => {
   try {
     const conversationList = await getDetailConversations({
       query: {
-        $and: [{ users: { $elemMatch: { $eq: userId } } }, { deleted: false }],
+        $and: [{ deleted: false }, { users: { $elemMatch: { $eq: userId } } }],
       },
       userId,
     });
@@ -187,7 +187,7 @@ const getGroupsService = async (userId) => {
   try {
     return await getDetailConversations({
       query: {
-        $and: [{ users: { $elemMatch: { $eq: userId } } }, { isGroup: true }, { deleted: false }],
+        $and: [{ isGroup: true }, { deleted: false }, { users: { $elemMatch: { $eq: userId } } }],
       },
       userId,
     });
@@ -466,9 +466,9 @@ const getMutualGroupsService = async (userIds) => {
   try {
     const conversations = await getDetailConversations({
       query: {
-        users: { $all: userIds },
-        isGroup: true,
         deleted: false,
+        isGroup: true,
+        users: { $all: userIds },
       },
       userId: userIds[0],
     });
